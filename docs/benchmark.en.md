@@ -208,101 +208,52 @@ Standalone measurement of the tokenization step in `lib/memory/embedding/Morphem
 
 ## LoCoMo
 
-[LoCoMo](https://github.com/snap-research/locomo) (ACL 2024): 10 conversations, 1,986 questions. Each dialog turn is stored as one fragment (`<date>: <speaker> said, "<utterance>"`), the top-k fragments are retrieved per question, and the answer comes from the official LoCoMo QA prompts. The reader is deepseek-flash and segment search is on. Answers were regenerated from the same retrieval results with only the number of context fragments (k) changed.
+10 conversations, 1,986 questions. Each dialog turn is stored as one fragment, and for each question the k most similar fragments are retrieved and used to answer. The answering model is deepseek-flash.
 
-### Official metrics
+| Fragments retrieved (k) | 10 | 20 | 50 |
+|---|---|---|---|
+| Accuracy (graded by MiniMax) | 0.805 | 0.840 | 0.863 |
+| Accuracy (graded by Claude) | 0.782 | 0.825 | 0.840 |
+| Official F1 | 0.605 | 0.630 | 0.633 |
+| Share with the evidence retrieved | 0.639 | 0.719 | 0.773 |
 
-Token F1 from the official evaluation code, and evidence recall (share of evidence turns present in the context). Adversarial questions ask the reader to choose a "not mentioned" option, so they are scored by the official rule only.
+Accuracy covers the 1,540 questions other than adversarial. At k=50, accuracy by category (MiniMax) is single-hop 0.891, temporal 0.882, multi-hop 0.826 and open-domain 0.667.
 
-| Category | n | F1 k=10 / 20 / 50 | Evidence recall k=10 / 20 / 50 |
-|----------|---|-------------------|--------------------------------|
-| multi-hop | 282 | 0.312 / 0.376 / 0.389 | 0.499 / 0.614 / 0.683 |
-| temporal | 321 | 0.549 / 0.563 / 0.563 | 0.791 / 0.856 / 0.894 |
-| open-domain | 96 | 0.260 / 0.302 / 0.291 | 0.432 / 0.559 / 0.641 |
-| single-hop | 841 | 0.592 / 0.628 / 0.649 | 0.775 / 0.844 / 0.890 |
-| adversarial | 446 | 0.928 / 0.913 / 0.881 | 0.407 / 0.485 / 0.552 |
-| **Overall** | 1,986 | **0.605 / 0.630 / 0.633** | **0.639 / 0.719 / 0.773** |
-
-### Model-graded accuracy
-
-The 1,540 non-adversarial questions were graded correct or wrong by MiniMax-M3.1-Flash-Preview and claude-sonnet-5-5. The grading prompt is the LoCoMo prompt from [Mem0 memory-benchmarks](https://github.com/mem0ai/memory-benchmarks), used verbatim.
-
-| Category | k=10 MiniMax / Claude | k=20 MiniMax / Claude | k=50 MiniMax / Claude |
-|----------|-----------------------|-----------------------|-----------------------|
-| multi-hop | 0.727 / 0.713 | 0.819 / 0.805 | 0.826 / 0.791 |
-| temporal | 0.835 / 0.832 | 0.857 / 0.866 | 0.882 / 0.879 |
-| open-domain | 0.615 / 0.521 | 0.667 / 0.594 | 0.667 / 0.583 |
-| single-hop | 0.841 / 0.817 | 0.860 / 0.842 | 0.891 / 0.870 |
-| **Overall** | **0.805 / 0.782** | **0.840 / 0.825** | **0.863 / 0.840** |
-
-The 95% confidence intervals of the overall MiniMax accuracy at k=10 and k=50 do not overlap (0.784-0.824 and 0.845-0.879).
-
-### Interpretation
-
-- Evidence recall keeps rising with more context (0.639 to 0.773), while F1 barely moves after k=20. Some evidence reaches the context and the reader still does not use it.
-- multi-hop gains the most from a larger k. Questions whose evidence is spread over several turns benefit most.
-- adversarial falls as k grows. Irrelevant fragments make the reader less likely to choose "not mentioned".
-- Evidence recall is still 0.773 at k=50, so about 23% of the evidence does not reach the context. Short turns are retrieved less often than long, specific ones.
-
-### Comparison caveats
-
-- These results cannot be compared directly with evaluations that use a different reader or grading model. Scores published by other systems differ in reader, grading model and number of retrieved memories.
-- Grading is a single run and the grading models are not gpt-5. Read token F1, the official metric, alongside.
+- More fragments help, but F1 barely rises after k=20.
+- Even at k=50, 23% of the evidence is not retrieved.
+- Adversarial questions, which have no answer, score lower as k grows (0.928 to 0.881).
+- Scores published by other systems use a different answering model, grading model and number of retrieved fragments, so they cannot be compared directly.
 
 ## MemBench
 
-Based on [MemBench](https://arxiv.org/abs/2506.21605). Each step of a conversation or observation record is stored as one fragment, the top 10 are retrieved for the question, and the benchmark's own prompts answer the four-option question. The reader is deepseek-flash and segment search is on. The metrics are accuracy and the share of target steps found among the retrieved fragments (target-step recall). The raw data files were used, which approximates the paper's short setting without added noise. One of 470 questions got no answer from the reader and is excluded, so the base is 469 questions.
+A benchmark that answers four-option questions from memory. Conversation or observation records are stored step by step, and for each question 10 fragments are retrieved to answer. 469 questions (one question the answering model could not answer is excluded). The answering model is deepseek-flash.
 
-| Group | n | Accuracy (95% CI) | Target-step recall |
-|-------|---|-------------------|--------------------|
-| **Overall** | 469 | **0.859 (0.825-0.888)** | 0.860 |
-| First-person low-level | 159 | 0.843 | 0.766 |
-| First-person high-level | 40 | 0.850 | 0.832 |
-| Third-person low-level | 230 | 0.878 | 0.913 |
-| Third-person high-level | 40 | 0.825 | 0.949 |
+**Accuracy 0.859** (95% interval 0.825-0.888). Random guessing is 0.25.
 
-| Category | n | Accuracy | Target-step recall |
-|----------|---|----------|--------------------|
-| Single-session-assistant | 30 | 1.000 | 1.000 |
-| Single-hop | 70 | 0.986 | 0.976 |
-| Comparative | 50 | 0.940 | 0.990 |
-| Post-processing | 70 | 0.900 | 0.811 |
-| Multi-hop | 69 | 0.870 | 0.794 |
-| Preference | 60 | 0.850 | 0.899 |
-| Emotion | 20 | 0.800 | 0.867 |
-| Knowledge-updating | 40 | 0.750 | 0.750 |
-| Multi-session-assistant | 10 | 0.700 | 0.873 |
-| Aggregative | 50 | 0.600 | 0.676 |
+| Question type | Accuracy |
+|---|---|
+| Single-session assistant (30 questions) | 1.00 |
+| Single-hop (70) | 0.99 |
+| Comparative (50) | 0.94 |
+| Multi-hop (69) | 0.87 |
+| Aggregative (50) | 0.60 |
 
-- Questions that need one or two steps score 0.94 or higher.
-- Recall falls first on Aggregative (0.600) and Multi-hop (0.870), which need scattered facts to be gathered. The top 10 does not hold every needed step.
-- Categories have 10-70 questions, so the intervals are wide. Multi-session-assistant has n=10.
+- Questions that need one or two records are almost always right.
+- Aggregative and multi-hop questions, which need records gathered from many places, are weaker. The needed records do not all fit in the top 10.
 
 ## BEAM
 
-Based on [BEAM](https://arxiv.org/abs/2510.27246) (ICLR 2026), 100K split: 20 conversations, 400 questions (10 abilities x 2 per conversation). User/assistant pairs are stored as fragments (pairs over 1,000 characters are split), the top 50 are retrieved once per question, and the benchmark's own RAG prompt answers from the top 10, 24 and 50. The official RAG baseline uses the top 5 pairs, whose text volume equals about 24 fragments, so k=24 is the primary column. Answers are graded with the benchmark's per-ability rubric evaluators by MiniMax-M3.1-Flash-Preview and claude-sonnet-5-5 separately, in place of the official judge (gpt-4.1-mini). Aggregation follows the official script (per-conversation ability mean, mean over conversations, mean over the 10 abilities); event_ordering uses tau_norm.
+20 long conversations (100K tokens), 400 questions. Conversations are stored as pairs, and for each question 24 fragments are retrieved to answer. The answering model is deepseek-flash. The official grading model is not available, so MiniMax and Claude each graded the answers.
 
-| Ability | MiniMax k=24 | Claude k=24 |
-|---------|--------------|-------------|
-| preference_following | 0.800 | 0.708 |
-| information_extraction | 0.737 | 0.711 |
-| knowledge_update | 0.544 | 0.519 |
-| instruction_following | 0.537 | 0.463 |
-| multi_session_reasoning | 0.505 | 0.472 |
-| abstention | 0.550 | 0.500 |
-| temporal_reasoning | 0.450 | 0.419 |
-| summarization | 0.402 | 0.300 |
-| event_ordering | 0.248 | 0.179 |
-| contradiction_resolution | 0.234 | 0.156 |
+| Grading model | Overall score |
+|---|---|
+| MiniMax | 0.50 |
+| Claude | 0.44 |
 
-| Overall (mean of 10 abilities, 95% CI) | k=10 | k=24 | k=50 |
-|------|------|------|------|
-| MiniMax | 0.481 | **0.501 (0.461-0.536)** | 0.490 |
-| Claude | 0.420 | **0.443 (0.404-0.479)** | 0.431 |
-
-- Both judges agree on ranking and trend; the mean absolute score difference over 1,200 answers is 0.077.
-- Going from k=24 to k=50 does not raise the score. The answering stage, not the amount retrieved, is the limit.
-- These are not scored by the official judge, so they cannot be compared directly with scores in the paper.
+- Strong abilities: preference following (0.71-0.80), information extraction (0.71-0.74).
+- Weak abilities: contradiction resolution (0.16-0.23), event ordering (0.18-0.25), summarization (0.30-0.40).
+- Raising the fragments from 24 to 50 does not raise the score.
+- The grading model is not the official one, so scores cannot be compared directly with the paper.
 
 ## Offline goldset measurement (2026-08-28)
 
