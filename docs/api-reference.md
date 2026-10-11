@@ -620,13 +620,16 @@ Agent 조회는 생략 시 `default`, 지정 시 해당 agent와 `default`를 �
 | linkRelationType | string | - | 연결 파편 관계 유형 필터 (related, caused_by, resolved_by, part_of, contradicts) |
 | threshold | number | - | similarity 임계값 (0~1) |
 | includeSuperseded | boolean | - | 만료(superseded) 파편 포함. 기본 false. |
+| includeHistory | boolean | - | true면 결과 파편이 대체한 이전 값(`superseded_by` 링크로 이어진 닫힌 파편)을 그 파편 바로 뒤에 `state: "superseded"`로 끼우고, 대체한 파편에는 `state: "current"`를 단다. 한 recall에 최대 5건이며 토큰 예산과 `pageSize` 밖에서 더해진다. 기본 false. |
+| intent | string | - | 질문 의도. `auto`(기본), `lookup`, `aggregate`, `temporal`, `state`. `auto`는 text(없으면 keywords)를 규칙으로 가린다(몇 번, 총, how many는 aggregate, 언제, 순서, before, after는 temporal, 지금, 바뀌, used to는 state). 직접 주면 기본값도 바뀐다: `aggregate`는 `pageSize` 하한 30, `temporal`은 `order: "chronological"`, `state`는 `includeHistory: true`. 직접 준 다른 인자가 우선한다. 결과는 `_meta.evidence`에 실린다(아래). |
+| order | string | - | 결과 순서. `rank`(기본)는 관련도 순, `chronological`은 세계 시각(`event_time`, 없으면 `mention_time`, 없으면 `created_at`) 오름차순이다. 시각이 없는 파편은 뒤에 두고 같은 시각은 관련도 순을 지킨다. `format: "pack"`에도 적용된다. |
 | includePeerAgents | boolean | - | master 전용. true 시 같은 키/workspace 스코프 내 다른 agentId 파편 포함. 일반 API 키는 권한 오류. 기본 false. |
 | includeKeyName | boolean | - | true 시 각 파편에 key_id와 key_name(액세스 키 라벨)을 포함한다. 같은 키 그룹 스코프의 정보만 노출된다. 기본 false. |
 | asOf | string | - | ISO 8601. 해당 시점에 가까운 파편을 상위로 올리는 시간 근접 랭킹 기준으로만 쓰인다. 그 시점에 유효했던 버전만 남기는 필터가 아니며, 기간을 한정하려면 `timeRange`를 쓴다. |
 | excludeSeen | boolean | - | context()에서 이미 주입된 파편 제외. 기본 true. |
 | includeKeywords | boolean | - | 각 파편의 keywords 배열을 응답에 포함 |
 | includeContext | boolean | - | context_summary + 인접 파편(`nearby_context`) 포함. 조합할 재료가 있는 상위 3건에는 `stitched_context`도 함께 반환 |
-| timeRange | object | - | {from, to} 시간 범위 필터 (ISO 8601 또는 자연어) |
+| timeRange | object | - | {from, to, basis} 시간 범위 필터 (ISO 8601 또는 자연어). `basis`가 `created`(기본)면 저장 시각, `event`면 세계 시각(`COALESCE(event_time, mention_time, created_at)`, 색인 `idx_fragments_world_time`)과 비교한다. |
 | caseId | string | - | 케이스 ID 필터. 해당 케이스 파편만 반환. |
 | resolutionStatus | string | - | 해결 상태 필터 (open / resolved / abandoned) |
 | phase | string | - | 작업 단계 필터 (planning, debugging, verification 등) |
@@ -757,6 +760,18 @@ reason code 목록 (최대 3개):
 
 `MEMENTO_PROVENANCE=on`(기본)이면 기본 형식 응답의 파편에 `origin`(저장 시 주장된 출처)과 `trust_tier`(0 격리, 1 낮음, 2 보통, 3 높음)가 붙는다. 값이 NULL인 기존 파편에는 두 필드가 없으며 등급은 2로 해석한다. `fields`를 지정하면 거기 든 키만 싣는다. 두 값은 recall과 같은 agent, 키(그룹 포함), workspace 범위로 파편 id마다 한 번 따로 조회하며, 조회가 실패하면 두 필드 없이 응답한다. 등급은 remember의 `origin` 설명을 따른다. `off`이면 조회하지 않고 필드도 없다.
 
+근거 메타(`_meta.evidence`): caseMode가 아닌 recall 응답에 실린다.
+
+| 필드 | 설명 |
+|-|-|
+| `intent`, `intent_source` | 질문 의도와 그 출처(`explicit`, `auto`) |
+| `status` | `no_evidence`(결과 없음), `conflicting`(상위 10건에 아직 유효한 충돌 상대), `partial`(질의 핵심 낱말 2개 이상 가운데 결과 본문에 나온 비율이 0.5 미만), `supported`. 낱말은 본문 어휘 채널과 같은 토큰화를 쓰고 의문사와 기능어는 뺀다. 결과 상위 30건만 본다 |
+| `coverage`, `uncovered_terms` | 덮인 비율과 결과 본문에 나오지 않은 질의 낱말. `partial`이면 이 낱말로 다시 검색하고, `no_evidence`면 기억에 없다고 답하는 데 쓴다 |
+| `bundle` | 의도가 `aggregate`, `temporal`, `state`일 때만. `rows`(세계 시각 오름차순: `id`, `time`, `time_basis`(`event`, `mention`, `stored`), 있을 때 `precision`, `mentioned`, `state`, `conflicts_with`, 본문 앞 160자 `preview`), `distinct_count`(날짜 머리와 공백을 무시하고 같은 본문을 하나로 센 수), `duplicate_ids`, `coverage`(`truncated`이면 페이지나 예산 때문에 후보가 더 있다) |
+| `digests` | `MEMENTO_DIGEST=on`(기본)이고 묶음 요약이 있을 때만. 의도가 `lookup`이 아니면 요청 topic(없으면 결과 상위 topic 3개)의 `topic_timeline`, 선호를 묻는 질의(선호, 좋아하, 추천, prefer, favorite, recommend 등)나 `type: "preference"`면 `preference_profile`. 항목은 `kind`, `subject`, `item_count`, `updated_at`, `content`. 같은 키, workspace, agent의 요약만 읽고, 출처 파편이 하나라도 유효하지 않은 요약은 싣지 않는다 |
+
+세계 시각과 상태 표지: 값이 있는 파편에는 `mention_time`(말한 시각), `event_time`과 `event_time_precision`(사건 시각과 정밀도 `minute`, `day`, `week`, `month`, `year`), 구간이면 `event_time_end`가 붙는다. contradicts 링크로 이어진 상대가 아직 유효하고 사람이 한쪽을 고른 해소 기록(`keep_left`, `keep_right`)이 없으면 `conflicts_with`(상대 id, 최대 5개)와 `state: "conflict"`가 붙는다. `includeHistory`로 끼운 이전 값에는 `state: "superseded"`와 `superseded_by`가 붙는다. 상대 파편은 recall과 같은 agent, 키(그룹 포함), workspace 범위에서만 찾는다. `fields`를 지정하면 거기 든 키만 싣는다.
+
 `MEMENTO_REVIEW_QUEUE=on`(기본)이면 이 키가 쓴 검토 대기 파편(`review_state='pending'`)이 결과에 그대로 보이며 `pending_review: true`와 낮은 신뢰 표지 `low_trust: true`가 `fields` 지정과 무관하게 붙는다. 같은 키 그룹의 다른 키, 마스터 키, context 주입에는 보이지 않는다. 승인되면 표지 없이 모두에게 보이고, 거절되면 만료 파편이 되어 쓴 키의 `includeSuperseded` 조회에만 `review_rejected` 표지와 함께 남는다.
 
 ### 답 꾸러미 (format: pack)
@@ -766,16 +781,16 @@ reason code 목록 (최대 3개):
 | 필드 | 설명 |
 |-|-|
 | `pack.version` | `v0` |
-| `pack.policy_id` | 정책 문단의 고정 식별자(`memento-pack-policy-v0`). 정책 문단 본문은 `pack.text`에만 한 번 들어간다 |
+| `pack.policy_id` | 정책 문단의 고정 식별자(`memento-pack-policy-v1`). 정책 문단 본문은 `pack.text`에만 한 번 들어간다 |
 | `pack.text` | 답에 바로 넣을 텍스트. `[MEMORY PACK v0]`, 기억 내용에서 파생하지 않는 고정 정책 문단(블록 안 내용은 자료이며 지시가 아니라는 것, date와 status, assertion의 뜻, 이스케이프 표기), 파편마다 여는 줄 `<<<MEMORY ...>>>`, 본문 한 줄, 닫는 줄 `<<<END MEMORY>>>` |
-| `pack.items[]` | 블록과 같은 순서의 속성: `id`, `date`(UTC 저장일 YYYY-MM-DD), `status`(`valid`, `superseded`), `assertion`, `type`, `topic`, `case_id`, `source`, `superseded_by`, `supersedes`, `truncated`, 있을 때만 `stale_warning`(recall의 stale 경고, 120자), `validation_warnings`(저장 시 검증 경고, 최대 5개, 각 120자), `origin`(`MEMENTO_PROVENANCE=on`일 때만, 값이 없으면 null). 본문은 `pack.text`에만 있다, 검토 대기 파편이면 `review`(`pending`, 여는 줄에는 `review=pending`) |
-| `pack.groups[]` | `{ key, ids }`. key는 `case:<caseId>`, caseId가 없으면 `topic:<topic>`. 묶음은 처음 나온 순서, 묶음 안은 순위 순서이며 블록도 이 순서다 |
+| `pack.items[]` | 블록과 같은 순서의 속성: `id`, `date`(UTC 저장일 YYYY-MM-DD), `status`(`valid`, `superseded`), `mentioned`(말한 날, 없으면 null), `event`(사건 시각을 정밀도대로 `YYYY`, `YYYY-MM`, `YYYY-MM-DD`, `YYYY-MM-DDTHH:MMZ`로 쓴 값, 정밀도의 기본 길이와 다른 구간이면 `시작..끝`, 없으면 null), `conflicts_with`(아직 유효한 충돌 상대 id), `assertion`, `type`, `topic`, `case_id`, `source`, `superseded_by`, `supersedes`, `truncated`, 있을 때만 `stale_warning`(recall의 stale 경고, 120자), `validation_warnings`(저장 시 검증 경고, 최대 5개, 각 120자), `origin`(`MEMENTO_PROVENANCE=on`일 때만, 값이 없으면 null). 본문은 `pack.text`에만 있다, 검토 대기 파편이면 `review`(`pending`, 여는 줄에는 `review=pending`) |
+| `pack.groups[]` | `{ key, ids }`. key는 `case:<caseId>`, caseId가 없으면 `topic:<topic>`. 묶음은 처음 나온 순서, 묶음 안은 순위 순서이며 블록도 이 순서다. `order: "chronological"`이면 블록과 items는 묶음으로 다시 줄 세우지 않고 세계 시각순이다 |
 | `pack.partial` | 출처와 대체 체인 조회가 실패해 그 정보 없이 만든 경우 `true` |
 | `pack.estimatedTokens` | `estimatedTokens`를 뺀 `pack` 객체를 응답과 같은 방식(JSON, 들여쓰기 2)으로 직렬화한 문자열의 cl100k_base 토큰 수(저장 경로와 recall 예산 선택이 쓰는 `countTokens`). 꾸러미 전체의 크기다 |
 
 규칙:
 
-- 날짜는 `created_at`의 UTC 날짜만 쓴다. 상대 날짜와 경과 일수(`age_days`)는 싣지 않는다.
+- `date`는 `created_at`, `mentioned`는 `mention_time`의 UTC 날짜다. 상대 날짜와 경과 일수(`age_days`)는 싣지 않는다. 여는 줄에는 값이 있는 `mentioned`, `event`, `conflicts_with`만 싣는다.
 - `status`는 `valid_to`가 없으면 `valid`, 있으면 `superseded`다(`includeSuperseded=true`일 때 나온다). `superseded_by`와 `supersedes`는 `superseded_by` 링크(삭제되지 않은 것)의 상대 id이며, 방향마다 상대 파편의 `created_at` 내림차순(같으면 id 오름차순)으로 최대 5개다. 이 체인과 `source`는 recall과 같은 agent, 키(그룹 포함), workspace 범위의 파편에 대해 한 번씩 따로 조회한다.
 - `source`는 저장된 값이며 `session:<id>`는 `session`으로 줄인다.
 - 본문과 여는 줄의 문자열 속성은 역슬래시, 줄바꿈, 탭과 일반 범주 Cc, Cf, Cs, Zl, Zp의 문자(소프트 하이픈, 폭 없는 문자, 방향 제어, 태그 문자 U+E0000~U+E007F 포함)를 `\\`, `\n`, `\t`, `\uXXXX`, `\u{XXXXX}`로 이스케이프한다. 세 개 이상 이어진 `<`, `>`는 `\u003c`, `\u003e`로 바꾸므로 본문이나 속성이 블록 구분자를 만들 수 없다. 길이 상한(본문 1000자, 속성 120자, 코드 포인트)은 이스케이프한 뒤의 길이에 적용하고 이스케이프 표기 중간에서 자르지 않는다. 잘린 본문은 `truncated=true`다. 문자열 속성은 큰따옴표로 감싼다.
@@ -865,7 +880,12 @@ reason code 목록 (최대 3개):
 | affect | string | - | 기억 당시의 정서 상태 태그. 기본값: neutral. 유효값: neutral, frustration, confidence, surprise, doubt, satisfaction |
 | idempotencyKey | string | - | 재시도 안전 식별자 (최대 128자). 같은 key_id 범위에서 동일 값으로 remember를 반복 호출하면 새 파편을 생성하지 않고 기존 파편 id를 반환한다. 클라이언트 재시도·네트워크 중복 방지 목적. |
 | origin | string | - | 기억의 출처 주장: user_stated, agent_inferred, tool_output, external_content, consolidation, import. 서버는 이 값과 initialize의 `clientInfo.name`, 키 상한으로 `trust_tier`(0~3)를 정한다. 등급은 출처 등급(user_stated 3, external_content 1, 그 밖 2)과 키 상한(권한 `trusted_origin` 또는 마스터 키 3, 그 밖 2) 중 작은 값이고, 1 이하는 context의 ANCHOR와 CORE 주입에서 빠진다. `consolidation`과 `import`도 주장할 수 있으며 다른 출처와 같이 출처 등급(2)과 키 상한 중 작은 값을 받는다. 허용 밖의 값은 `-32602`. 미지정이면 출처 없음(등급 2). `MEMENTO_PROVENANCE=off`이면 무시된다 |
+| mentionTime | string | - | 그 내용을 말하거나 관찰한 시각 (ISO 8601, 최대 64자). 지난 대화를 옮겨 저장할 때 원래 시각을 준다. 생략하면 저장 시각으로 본다. 시간 근접 랭킹과 모순 해소의 선후 판정이 이 값(없으면 `created_at`)을 쓴다. 해석할 수 없으면 버리고 `validation_warnings`에 `mentionTimeInvalid` |
+| eventTime | string | - | 내용이 가리키는 사건 시각. `YYYY`, `YYYY-MM`, `YYYY-MM-DD`, ISO 시각, 또는 날짜 표현(`어제`, `3일 전`, `last week`). 날짜 표현은 `mentionTime`(없으면 지금) 기준이다. 생략하면 `MEMENTO_EVENT_TIME_EXTRACT=on`(기본)일 때 본문의 날짜 표현에서 뽑는다. 해석할 수 없으면 버리고 `eventTimeInvalid` |
+| eventTimeEnd | string | - | 구간 사건의 끝 시각 (ISO 8601, 배타 상한). `eventTime`보다 늦지 않으면 버리고 `eventTimeEndInvalid` |
 | dryRun | boolean | - | true 설정 시 변경을 실제 적용하지 않고 실행 계획만 반환. 할당량·충돌 검사 결과를 파편 생성 없이 미리 확인할 수 있다. |
+
+본문 날짜 추출은 규칙 기반이며 LLM을 부르지 않는다. 절대 날짜(`2026-03-14`, `2026년 3월 14일`, `2026년 3월`, `March 14, 2026`, 연도 없는 `3월 14일`은 기준 시각의 연도)와 상대 표현(`오늘`, `어제`, `그제`, `내일`, `모레`, `N일/주/개월/년 전·후`, `지난주`, `이번 달`, `작년`, `today`, `yesterday`, `N days ago`, `last week`)을 UTC 달력으로 해석한다. `10/12`처럼 읽는 법이 둘 이상인 표기는 뽑지 않는다. 표현이 여럿이면 기준 시각과 같은 날을 가리키지 않는 첫 표현을 고른다(본문 머리의 발화 날짜보다 본문 속 "지난주"를 고른다). 정밀도는 `day`, `week`, `month`, `year`이며 `week` 이상은 `event_time_end`에 구간 끝이 들어간다.
 
 `affect` 사용 예:
 ```json
@@ -996,7 +1016,7 @@ violations 있는 경우 (soft gate — 저장됨):
 
 | 이름 | 타입 | 필수 | 설명 |
 |------|------|------|------|
-| fragments | object[] | O | 저장할 파편 배열 (최대 200건). 각 항목은 content(string, 필수, 최대 4000자, 초과 시 해당 항목 `-32602` 거부), topic(string, 필수), type(string, 필수), importance(number), keywords(string[]), workspace(string), idempotencyKey(string, 최대 128자), origin(string, remember의 `origin`과 같은 값과 규칙, 허용 밖의 값은 그 항목만 실패) 포함. |
+| fragments | object[] | O | 저장할 파편 배열 (최대 200건). 각 항목은 content(string, 필수, 최대 4000자, 초과 시 해당 항목 `-32602` 거부), topic(string, 필수), type(string, 필수), importance(number), keywords(string[]), workspace(string), idempotencyKey(string, 최대 128자), origin(string, remember의 `origin`과 같은 값과 규칙, 허용 밖의 값은 그 항목만 실패), mentionTime, eventTime, eventTimeEnd(string, remember와 같은 규칙. 해석 경고는 그 항목의 `validation_warnings`에 실린다) 포함. |
 | workspace | string | - | 배치 기본 워크스페이스. 개별 파편에 workspace 미지정 시 이 값으로 대체. 미지정 시 키의 default_workspace 적용. |
 | agentId | string | - | 에이전트 ID (에이전트 구분용) |
 | stream | boolean | - | deprecated: 더 이상 SSE progress 이벤트를 보내지 않는다. batch_remember는 표준 단일 JSON 응답으로 반환된다. 이 파라미터는 하위 호환성을 위해 유지되지만 동작에 영향을 주지 않는다. |
@@ -1093,13 +1113,13 @@ violations 있는 경우 (soft gate — 저장됨):
 
 | 상황 | 응답 | isError |
 |-|-|-|
-| 삭제 성공 | `{success: true, deleted: 1, protected: 0, purged: {case_summaries: 2, audit_fragments: 1}}` | false |
+| 삭제 성공 | `{success: true, deleted: 1, protected: 0, purged: {case_summaries: 2, audit_fragments: 1, digests: 0}}` | false |
 | permanent 계층 파편에 force 미지정 | `{success: true, deleted: 0, protected: 1, reason: "permanent 파편은 force 옵션 필요"}` | false |
 | 대상이 없거나 접근 권한 없음 | `{success: true, deleted: 0, error: "Fragment not found or no permission"}` | true |
 
 세 번째 경우는 페이로드의 `success`가 true인데 `error` 키가 함께 실리고, 그 키 때문에 MCP 봉투가 `isError: true`로 뒤집힌다. 이미 삭제된 대상을 재시도로 다시 지우면 이 응답을 받으므로, 클라이언트는 삭제 실패로 오인하지 않도록 `deleted` 값을 함께 봐야 한다.
 
-`purged`는 삭제 연쇄의 영수증이다(`MEMENTO_FORGET_CASCADE=on`, 기본). 파편 삭제와 같은 트랜잭션에서 `case_summaries`는 지운 파편을 출처로 한 `case_events` 요약을 `[삭제됨]`으로 바꾼 수, `audit_fragments`는 지운 파편을 가리키던 서버 기록 모순 해소 파편을 함께 지운 수다(`deleted`에는 세지 않는다). 삭제 단계까지 간 응답(대상이 없는 topic 삭제 포함)에 실리고, id 대상이 없거나 권한이 없거나 permanent 보호로 끝난 응답에는 없다. `off`이면 `purged`가 없다.
+`purged`는 삭제 연쇄의 영수증이다(`MEMENTO_FORGET_CASCADE=on`, 기본). 파편 삭제와 같은 트랜잭션에서 `case_summaries`는 지운 파편을 출처로 한 `case_events` 요약을 `[삭제됨]`으로 바꾼 수, `audit_fragments`는 지운 파편을 가리키던 서버 기록 모순 해소 파편을 함께 지운 수(`deleted`에는 세지 않는다), `digests`는 지운 파편을 출처로 가진 묶음 요약(`fragment_digest`)을 지운 수다. 삭제 단계까지 간 응답(대상이 없는 topic 삭제 포함)에 실리고, id 대상이 없거나 권한이 없거나 permanent 보호로 끝난 응답에는 없다. `off`이면 `purged`가 없다.
 
 ---
 
@@ -1129,6 +1149,7 @@ violations 있는 경우 (soft gate — 저장됨):
 | 이름 | 타입 | 필수 | 설명 |
 |------|------|------|------|
 | id | string | O | 갱신 대상 파편 ID |
+| mentionTime, eventTime, eventTimeEnd | string | - | 세계 시각을 고친다. 규칙은 remember와 같지만 본문에서 뽑지 않고 준 값만 해석한다. `eventTime`의 날짜 표현은 같은 호출의 `mentionTime`(없으면 지금) 기준이고, `eventTimeEnd`는 같은 호출에 `eventTime`이 있을 때만 받는다. 해석할 수 없는 값은 버리고 응답 `validation_warnings`에 규칙 이름을 싣는다 |
 | content | string | - | 새 내용. remember와 같은 상한(4000자)을 적용하며 초과 시 `-32602`로 거부된다. remember와 같이 민감 정보를 마스킹하고 300자(episode는 1000자)를 넘으면 잘라 저장한다. remember의 자기완결성 기준을 따른다 |
 | topic | string | - | 새 주제 |
 | keywords | string[] | - | 새 키워드 목록 |

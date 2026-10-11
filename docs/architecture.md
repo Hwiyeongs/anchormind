@@ -1049,7 +1049,7 @@ recall 도구는 비용이 낮은 계층부터 순서대로 검색한다. 앞 �
 
 **L2: PostgreSQL GIN 인덱스.** L1 실행 후 항상 실행된다. keywords TEXT[] 컬럼에 GIN(Generalized Inverted Index) 인덱스가 걸려 있다. 검색은 `keywords && ARRAY[...]` 연산자로 수행한다 — 배열 간 교집합 존재 여부를 묻는 연산자다. GIN 인덱스는 배열의 각 원소를 개별적으로 인덱싱하므로 이 연산이 인덱스 스캔으로 처리된다. 순차 스캔이 아니다.
 
-**L2.5: Graph 이웃 확장.** L2 상위 5개 파편의 1-hop 이웃을 fragment_links에서 수집한다. GraphNeighborSearch가 담당하며 RRF 병합 시 가중치 1.5x가 적용된다. 그래프 이웃은 L2 결과가 존재할 때만 실행되므로 추가 비용은 단일 SQL 조회 1회다.
+**L2.5: Graph 이웃 확장.** text 검색에서는 L2와 L3 상위 파편을 번갈아 고른 `graph.seedCount`개(기본 10)의 1-hop 이웃을 fragment_links에서 수집한다. 의미 검색으로만 찾은 파편의 연결 근거도 후보가 된다. GraphNeighborSearch가 담당하며 RRF 병합 시 가중치 1.5x가 적용된다. 시드가 없으면 실행하지 않으며 추가 비용은 단일 SQL 조회 1회다.
 
 **L3: pgvector HNSW 코사인 유사도.** recall 파라미터에 `text` 필드가 있을 때만 발동한다. 결과 수 부족만으로는 L3가 활성화되지 않는다. 쿼리 텍스트를 임베딩 벡터로 변환하여 `embedding <=> $1` 연산자로 코사인 거리를 계산한다. EmbeddingCache가 Redis에 쿼리 임베딩을 캐싱(키: `emb:q:{sha256 앞 16자}`, TTL 1시간)하므로 동일 쿼리 반복 시 임베딩 API 호출을 건너뛴다. 캐시 장애 시 원본 API로 폴백한다. 모든 임베딩은 L2 정규화된 단위 벡터이므로 코사인 유사도와 내적이 동치다. HNSW 인덱스가 근사 최근접 이웃을 빠르게 찾는다. `threshold` 파라미터로 유사도 하한을 지정할 수 있다 — 이 값 미만의 L3 결과는 결과에서 제외된다. L1/L2 경유 결과는 similarity 값이 없으므로 threshold 필터링에서 제외된다.
 
@@ -1579,7 +1579,7 @@ FragmentSearch는 검색 파이프라인 결과 생성에만 집중하고, 부�
 
 `lib/memory/consolidate/MemoryConsolidator.js`. stage 목록을 `stageDefs[]` 배열로 선언하며 `TOTAL_STAGES = stageDefs.length`로 자동 집계한다. 새 stage 추가 시 배열에 항목 1개만 push하면 progress 계산과 emit이 자동 반영된다.
 
-현재 22개 stage (순서):
+현재 23개 stage (순서):
 
 | 번호 | name | 설명 |
 |---|---|---|
@@ -1598,13 +1598,14 @@ FragmentSearch는 검색 파이프라인 결과 생성에만 집중하고, 부�
 | 13 | promote_anchors | anchor 승격 |
 | 14 | detect_contradictions | 모순 감지 |
 | 15 | detect_supersessions | supersede 관계 감지 |
-| 16 | process_pending_contradictions | 보류 모순 처리 |
-| 17 | feedback_report | 피드백 리포트 생성 |
-| 18 | feedback_calibration | 피드백 기반 보정 |
-| 19 | prune_keyword_indexes | 키워드 인덱스 정리 |
-| 20 | collect_stale_fragments | stale 파편 수집 |
-| 21 | purge_stale_reflections | 오래된 reflect 정리 |
-| 22 | gc_search_events | 검색 이벤트 GC |
+| 16 | build_digests | topic 시간선과 선호 목록 요약 생성(`MEMENTO_DIGEST`) |
+| 17 | process_pending_contradictions | 보류 모순 처리 |
+| 18 | feedback_report | 피드백 리포트 생성 |
+| 19 | feedback_calibration | 피드백 기반 보정 |
+| 20 | prune_keyword_indexes | 키워드 인덱스 정리 |
+| 21 | collect_stale_fragments | stale 파편 수집 |
+| 22 | purge_stale_reflections | 오래된 reflect 정리 |
+| 23 | gc_search_events | 검색 이벤트 GC |
 
 ### batchPool / Primary pool 분리
 

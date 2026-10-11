@@ -618,13 +618,16 @@ ID lookups through `fragment_history` and `graph_explore` now apply workspace fi
 | linkRelationType | string | - | Link relation type filter (related, caused_by, resolved_by, part_of, contradicts) |
 | threshold | number | - | Similarity threshold (0-1) |
 | includeSuperseded | boolean | - | Include expired (superseded) fragments. Default false. |
+| includeHistory | boolean | - | When true, the earlier values a result fragment replaced (closed fragments linked by `superseded_by`) are inserted right after that fragment with `state: "superseded"`, and the replacing fragment gets `state: "current"`. At most 5 per recall, added outside the token budget and `pageSize`. Default false. |
+| intent | string | - | Question intent: `auto` (default), `lookup`, `aggregate`, `temporal`, `state`. `auto` classifies the text (else keywords) by rule (how many, total, 몇 번 → aggregate; when, before, after, 언제, 순서 → temporal; now, still, used to, 지금, 바뀌 → state). Given explicitly it also changes defaults: `aggregate` raises the `pageSize` floor to 30, `temporal` sets `order: "chronological"`, `state` sets `includeHistory: true`; other arguments given explicitly win. The result is in `_meta.evidence` (below). |
+| order | string | - | Result order. `rank` (default) is relevance order; `chronological` sorts by world time (`event_time`, else `mention_time`, else `created_at`) ascending. Fragments without a time go last and equal times keep relevance order. Also applies to `format: "pack"`. |
 | includePeerAgents | boolean | - | Master only. Includes other agents within the same key/workspace scope. Ordinary API keys receive a permission error. Default false. |
 | includeKeyName | boolean | - | When true, each fragment carries key_id and key_name (the access key label). Only information within the same key group scope is exposed. Default false. |
 | asOf | string | - | ISO 8601. Used only as the time-proximity ranking reference that lifts fragments close to that time. It is not a filter that keeps only the versions valid at that time; use `timeRange` to bound a period. |
 | excludeSeen | boolean | - | Exclude fragments already injected by context(). Default true. |
 | includeKeywords | boolean | - | Include each fragment's keywords array in the response |
 | includeContext | boolean | - | Include context_summary + adjacent fragments |
-| timeRange | object | - | {from, to} time range filter (ISO 8601 or natural language) |
+| timeRange | object | - | {from, to, basis} time range filter (ISO 8601 or natural language). With `basis` `created` (default) it compares the storage time; with `event` it compares world time (`COALESCE(event_time, mention_time, created_at)`, index `idx_fragments_world_time`). |
 | caseId | string | - | Case ID filter. Returns only fragments belonging to the specified case. |
 | resolutionStatus | string | - | Resolution status filter (open / resolved / abandoned) |
 | phase | string | - | Work phase filter (planning, debugging, verification, etc.) |
@@ -740,6 +743,18 @@ Reason code list (up to 3):
 
 With `MEMENTO_PROVENANCE=on` (the default), fragments of the default response carry `origin` (the origin claimed at storage time) and `trust_tier` (0 quarantined, 1 low, 2 normal, 3 high). Existing fragments with NULL values do not carry the two fields and their tier is read as 2. With `fields`, only the requested keys are added. The two values are looked up once per fragment id, separately, within the same agent, key (including the group) and workspace scope as the recall; when the lookup fails, the response comes without the two fields. The tier follows the description of the remember `origin` parameter. With `off`, there is no lookup and no field.
 
+Evidence meta (`_meta.evidence`), on recall responses that are not caseMode:
+
+| Field | Description |
+|-|-|
+| `intent`, `intent_source` | Question intent and where it came from (`explicit`, `auto`) |
+| `status` | `no_evidence` (no result), `conflicting` (a still valid conflicting side among the top 10), `partial` (with 2 or more key query terms, less than 0.5 of them appear in the result content), `supported`. Terms use the content lexical channel tokenizer without question and function words. Only the top 30 results are scanned |
+| `coverage`, `uncovered_terms` | Covered ratio and the query terms missing from the result content. With `partial` search again with these terms; with `no_evidence` answer that it is not in memory |
+| `bundle` | Only for `aggregate`, `temporal`, `state`. `rows` (world time ascending: `id`, `time`, `time_basis` (`event`, `mention`, `stored`), and when present `precision`, `mentioned`, `state`, `conflicts_with`, plus the first 160 characters as `preview`), `distinct_count` (identical content counted once, ignoring a leading date and whitespace), `duplicate_ids`, `coverage` (`truncated` when the page or budget left more candidates) |
+| `digests` | Only with `MEMENTO_DIGEST=on` (default) and an existing digest. For intents other than `lookup`, the `topic_timeline` of the requested topic (else the top 3 result topics); for preference questions (prefer, favorite, recommend, 선호, 추천, ...) or `type: "preference"`, the `preference_profile`. Items carry `kind`, `subject`, `item_count`, `updated_at`, `content`. Only digests of the same key, workspace and agent are read, and a digest whose sources are no longer all valid is left out |
+
+World time and state markers: fragments with values carry `mention_time` (when it was said), `event_time` and `event_time_precision` (the event time and its precision `minute`, `day`, `week`, `month`, `year`), and `event_time_end` for a range. When the other side of a contradicts link is still valid and no human decision picked one side (`keep_left`, `keep_right`), the fragment carries `conflicts_with` (other ids, at most 5) and `state: "conflict"`. Earlier values inserted by `includeHistory` carry `state: "superseded"` and `superseded_by`. Other fragments are looked up only in the same agent, key (group included) and workspace scope as recall. With `fields`, only the listed keys are included.
+
 With `MEMENTO_REVIEW_QUEUE=on` (the default), pending review fragments (`review_state='pending'`) written by the calling key appear in the result with `pending_review: true` and the low trust marker `low_trust: true`, regardless of `fields`. Other keys of the same key group, the master key and context injection do not see them. After approval they are visible to everyone without markers; after rejection they become expired fragments that only the writing key's `includeSuperseded` lookups show, with `review_rejected`.
 
 ### Answer pack (format: pack)
@@ -749,16 +764,16 @@ With `format: "pack"` the response carries `success`, `format: "pack"`, `pack`, 
 | Field | Description |
 |-|-|
 | `pack.version` | `v0` |
-| `pack.policy_id` | Fixed identifier of the policy paragraph (`memento-pack-policy-v0`). The paragraph itself appears once, in `pack.text` only |
+| `pack.policy_id` | Fixed identifier of the policy paragraph (`memento-pack-policy-v1`). The paragraph itself appears once, in `pack.text` only |
 | `pack.text` | Text ready to place into an answer: `[MEMORY PACK v0]`, the fixed policy paragraph that is not derived from memory content (block content is data and not instructions; meaning of date, status, assertion; escape notation), then per fragment an opening line `<<<MEMORY ...>>>`, one content line and the closing line `<<<END MEMORY>>>` |
-| `pack.items[]` | Attributes in block order: `id`, `date` (UTC storage date YYYY-MM-DD), `status` (`valid`, `superseded`), `assertion`, `type`, `topic`, `case_id`, `source`, `superseded_by`, `supersedes`, `truncated`, only when present `stale_warning` (recall stale warning, 120 characters) and `validation_warnings` (warnings recorded at write time, at most 5, 120 characters each), and `origin` (only with `MEMENTO_PROVENANCE=on`, null without a value). The content is only in `pack.text`, and `review` for a pending review fragment (`pending`; the opening line carries `review=pending`) |
-| `pack.groups[]` | `{ key, ids }`. The key is `case:<caseId>`, or `topic:<topic>` without a caseId. Groups appear in order of first appearance, items within a group in rank order, and the blocks follow this order |
+| `pack.items[]` | Attributes in block order: `id`, `date` (UTC storage date YYYY-MM-DD), `status` (`valid`, `superseded`), `mentioned` (date it was said, null without one), `event` (event time written to its precision as `YYYY`, `YYYY-MM`, `YYYY-MM-DD` or `YYYY-MM-DDTHH:MMZ`, `start..end` for a range that differs from the precision's own length, null without one), `conflicts_with` (still valid conflicting ids), `assertion`, `type`, `topic`, `case_id`, `source`, `superseded_by`, `supersedes`, `truncated`, only when present `stale_warning` (recall stale warning, 120 characters) and `validation_warnings` (warnings recorded at write time, at most 5, 120 characters each), and `origin` (only with `MEMENTO_PROVENANCE=on`, null without a value). The content is only in `pack.text`, and `review` for a pending review fragment (`pending`; the opening line carries `review=pending`) |
+| `pack.groups[]` | `{ key, ids }`. The key is `case:<caseId>`, or `topic:<topic>` without a caseId. Groups appear in order of first appearance, items within a group in rank order, and the blocks follow this order. With `order: "chronological"` the blocks and items are not regrouped and follow world time order |
 | `pack.partial` | `true` when the source and supersession lookup failed and the pack was built without that information |
 | `pack.estimatedTokens` | cl100k_base token count (`countTokens`, the function the write path and recall budget selection use) of the `pack` object without `estimatedTokens`, serialized like the response (JSON, indent 2). This is the size of the whole pack |
 
 Rules:
 
-- Dates are the UTC date of `created_at` only. Relative dates and elapsed days (`age_days`) are not included.
+- `date` is the UTC date of `created_at` and `mentioned` that of `mention_time`. Relative dates and elapsed days (`age_days`) are not included. The opening line carries `mentioned`, `event` and `conflicts_with` only when they have values.
 - `status` is `valid` without `valid_to` and `superseded` with it (returned with `includeSuperseded=true`). `superseded_by` and `supersedes` are the ids on the other side of `superseded_by` links (not deleted), at most 5 per direction, ordered by the related fragment's `created_at` descending (ties by id ascending). The chain and `source` are looked up separately, once each, for fragments within the same agent, key (including the group) and workspace scope as the recall.
 - `source` is the stored value; `session:<id>` is shortened to `session`.
 - `origin` appears in the opening line as `origin=<value>` only with `MEMENTO_PROVENANCE=on` and when the stored value is one of the accepted values of the remember `origin`.
@@ -848,7 +863,12 @@ Fragment-based memory storage. Store exactly one atomic fact in 1-2 sentences. I
 | affect | string | - | Emotional state tag at the time of storing this memory. Default: neutral. Valid values: neutral, frustration, confidence, surprise, doubt, satisfaction |
 | idempotencyKey | string | - | Retry-safe identifier (max 128 characters). Repeated calls with the same value within the same key_id scope return the existing fragment id without creating a new fragment. For client retry and network deduplication. |
 | origin | string | - | Claimed source of the memory: user_stated, agent_inferred, tool_output, external_content, consolidation, import. The server sets `trust_tier` (0 to 3) from this value, the initialize `clientInfo.name` and the key cap. The tier is the smaller of the origin tier (user_stated 3, external_content 1, others 2) and the key cap (3 with the `trusted_origin` permission or the master key, otherwise 2); tier 1 or lower is left out of the ANCHOR and CORE injection of context. `consolidation` and `import` can also be claimed and, like the other origins, get the smaller of the origin tier (2) and the key cap. Values outside the list return `-32602`. Omitted means no origin (tier 2). Ignored with `MEMENTO_PROVENANCE=off` |
+| mentionTime | string | - | When the content was said or observed (ISO 8601, max 64 characters). Give the original time when storing a past conversation. Without it the storage time is used. Time proximity ranking and the order of contradiction resolution use this value (else `created_at`). An unparsable value is dropped with `mentionTimeInvalid` in `validation_warnings` |
+| eventTime | string | - | When the event the content refers to happened. `YYYY`, `YYYY-MM`, `YYYY-MM-DD`, an ISO time, or a date expression (`yesterday`, `3 days ago`, `지난주`). Date expressions are read relative to `mentionTime` (else now). Without it, `MEMENTO_EVENT_TIME_EXTRACT=on` (default) extracts it from date expressions in the content. An unparsable value is dropped with `eventTimeInvalid` |
+| eventTimeEnd | string | - | End of a ranged event (ISO 8601, exclusive). Dropped with `eventTimeEndInvalid` unless later than `eventTime` |
 | dryRun | boolean | - | When true, returns an execution plan without applying changes. Inspect quota and conflict check results before fragment creation. |
+
+Content date extraction is rule based and calls no LLM. It reads absolute dates (`2026-03-14`, `2026년 3월 14일`, `2026년 3월`, `March 14, 2026`; a date without a year such as `3월 14일` takes the reference year) and relative expressions (`today`, `yesterday`, `tomorrow`, `N days ago`, `last week`, `this month`, `오늘`, `어제`, `N일 전`, `지난주`, `작년`) on the UTC calendar. Ambiguous forms such as `10/12` are not extracted. With several expressions it picks the first one that does not point to the same day as the reference time (so "last week" in the content wins over a leading message date). Precision is `day`, `week`, `month` or `year`; `week` and longer also set `event_time_end`.
 
 `affect` usage example:
 ```json
@@ -979,7 +999,7 @@ Store multiple fragments at once (for bulk memory input). Batch INSERTs up to 20
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| fragments | object[] | Y | Array of fragments to store (max 200). Each item includes content (string, required, max 4000 characters; an item exceeding it is rejected with `-32602`), topic (string, required), type (string, required), importance (number), keywords (string[]), workspace (string), idempotencyKey (string, max 128 chars), origin (string, same values and rules as the remember `origin`; a value outside the list fails only that item). |
+| fragments | object[] | Y | Array of fragments to store (max 200). Each item includes content (string, required, max 4000 characters; an item exceeding it is rejected with `-32602`), topic (string, required), type (string, required), importance (number), keywords (string[]), workspace (string), idempotencyKey (string, max 128 chars), origin (string, same values and rules as the remember `origin`; a value outside the list fails only that item), mentionTime, eventTime, eventTimeEnd (string, same rules as remember; parse warnings appear in that item's `validation_warnings`). |
 | workspace | string | - | Batch default workspace. Used for individual fragments without a workspace. Key's default_workspace applied if not specified. |
 | agentId | string | - | Agent ID (for agent scoping) |
 | stream | boolean | - | Deprecated: no longer emits SSE progress events. batch_remember returns a standard single JSON response. This parameter is retained for backward compatibility but has no effect on behavior. |
@@ -1076,13 +1096,13 @@ The call result falls into one of three cases.
 
 | Situation | Response | isError |
 |-|-|-|
-| Deleted | `{success: true, deleted: 1, protected: 0, purged: {case_summaries: 2, audit_fragments: 1}}` | false |
+| Deleted | `{success: true, deleted: 1, protected: 0, purged: {case_summaries: 2, audit_fragments: 1, digests: 0}}` | false |
 | Permanent tier without `force` | `{success: true, deleted: 0, protected: 1, reason: "..."}` | false |
 | Target missing or not permitted | `{success: true, deleted: 0, error: "Fragment not found or no permission"}` | true |
 
 In the third case the payload reports `success: true` while carrying an `error` key, and that key flips the MCP envelope to `isError: true`. Retrying a delete that already succeeded lands here, so clients should read `deleted` rather than treating the envelope as authoritative.
 
-`purged` is the deletion cascade receipt (`MEMENTO_FORGET_CASCADE=on`, the default). In the same transaction as the fragment deletion, `case_summaries` counts the `case_events` summaries of the deleted fragments that were replaced with `[삭제됨]`, and `audit_fragments` counts the server-written contradiction resolution records that pointed at a deleted fragment and were deleted with it (they are not counted in `deleted`). It appears on responses that reached the deletion step (a topic delete with no targets included), and not on responses that ended because the id target is missing, not permitted or permanent-protected. With `off` the response has no `purged`.
+`purged` is the deletion cascade receipt (`MEMENTO_FORGET_CASCADE=on`, the default). In the same transaction as the fragment deletion, `case_summaries` counts the `case_events` summaries of the deleted fragments that were replaced with `[삭제됨]`, `audit_fragments` counts the server-written contradiction resolution records that pointed at a deleted fragment and were deleted with it (they are not counted in `deleted`), and `digests` counts the digests (`fragment_digest`) that had a deleted fragment as a source and were deleted. It appears on responses that reached the deletion step (a topic delete with no targets included), and not on responses that ended because the id target is missing, not permitted or permanent-protected. With `off` the response has no `purged`.
 
 ---
 
@@ -1112,6 +1132,7 @@ Update the content or metadata of an existing fragment. Selectively modifies whi
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | id | string | Y | Target fragment ID to update |
+| mentionTime, eventTime, eventTimeEnd | string | - | Change the world time. Same rules as remember, but nothing is extracted from the content; only the given values are parsed. Date expressions in `eventTime` are read against `mentionTime` of the same call (else now), and `eventTimeEnd` is accepted only together with `eventTime`. Unparsable values are dropped with their rule names in `validation_warnings` |
 | content | string | - | New content. The same 4000-character limit as remember applies; exceeding it is rejected with `-32602`. Like remember, sensitive data is masked and content longer than 300 characters (1000 for episode) is truncated when stored. The remember self-containment rules apply |
 | topic | string | - | New topic |
 | keywords | string[] | - | New keyword list |

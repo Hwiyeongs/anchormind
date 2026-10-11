@@ -41,6 +41,7 @@ const ALLOWED = {
   "memory/WorkingMemoryRows.js": 8, // 작업 기억 행의 조회와 삭제는 FragmentIndex의 작업 기억 계약 뒤에서 호출되며, FragmentWriter가 FragmentIndex를 가져오므로 데이터 계층으로 옮기면 가져오기 순환이 생긴다
   "memory/WorkingMemorySql.js": 1, // 키 삭제 트랜잭션이 키 행을 지우기 전에 그 키의 작업 기억 행을 지운다. 질의를 받는 client를 인자로 쓰므로 데이터 계층 객체를 거치지 않는다
   "memory/consolidate/ConsolidatorGC.js": 12,
+  "memory/consolidate/DigestBuilder.js": 5, // 정리 주기의 묶음 요약 생성: topic 묶음과 선호 묶음 선별, 묶음별 파편 조회, 출처가 닫힌 요약 판정. 묶음 집계와 요약 표 쓰기를 한 단계에 두어 FragmentReader에 일회성 집계 질의를 늘리지 않는다
   "memory/consolidate/FragmentGC.js": 11,
   "memory/consolidate/MemoryConsolidator.js": 26, // semantic_dedup 병합은 잠금, 폐기, linked_to, 합산을 한 트랜잭션 클라이언트로 쓴다
   "memory/consolidate/MorphemeBackfill.js": 2,
@@ -60,6 +61,7 @@ const ALLOWED = {
   "memory/read/ContextBuilder.js": 1,
   "memory/read/FragmentReader.js": 18, // recall 예산 선택 토큰, 모순 감사 등급, Hot Cache 본문·검토 버전 재검증
   "memory/read/HistoryReconstructor.js": 1,
+  "memory/read/DigestLoader.js": 1, // 묶음 요약을 읽을 때 출처 파편이 모두 유효한지 같은 문장의 NOT EXISTS로 확인한다
   "memory/read/KeyNameEnricher.js": 1,
   "memory/read/ProvenanceLoader.js": 1, // 답 꾸러미, recall 응답, context core 후보의 출처 열(source, origin, trust_tier)을 대체 체인 조회와 같은 recall의 agent, 키, workspace 범위 절로 읽는다. 답 꾸러미 source 조회를 옮겨 와 AnswerPackLoader에는 직접 접근이 없다. FragmentReader 메서드로 옮기면 그 범위 절을 중복한다
   "memory/read/LexicalSearch.js": 1, // 본문 어휘 채널 질의. content_tokens 전문 검색과 범위 조건을 한 모듈에 두어 FragmentReader의 크기를 늘리지 않는다

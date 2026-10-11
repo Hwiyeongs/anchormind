@@ -46,7 +46,7 @@
 | true, false (그 밖의 값은 `MEMORY_CONFIG` 검증에서 기동 실패) | MEMENTO_AUTO_PROMOTE_ANCHORS (true) |
 | on, off (그 밖의 값은 off) | MEMENTO_ADMIN_AUTH_BACKOFF |
 | 쉼표로 나눈 `id:32바이트 키`(base64 또는 64자 hex), 그 밖은 미설정으로 동작 | MEMENTO_ADMIN_SEAL_KEY |
-| on, off (그 밖의 값은 on) | MEMENTO_WRITE_GATE, MEMENTO_OUTBOX, MEMENTO_OUTBOX_WORKER, MEMENTO_WM_PG_FALLBACK, MEMENTO_RANK_BEFORE_BUDGET, MEMENTO_RANKING_FIX_V2, MEMENTO_GC_THROUGHPUT, MEMENTO_CONTEXT_ANNOTATE, MEMENTO_PROVENANCE, MEMENTO_REVIEW_QUEUE, MEMENTO_HOOK_ENDPOINTS, MEMENTO_FORGET_CASCADE, MEMENTO_EGRESS_POLICY, MEMENTO_AUDIT_DB, MEMENTO_ADMIN_USERS, MEMENTO_LEXICAL_CHANNEL |
+| on, off (그 밖의 값은 on) | MEMENTO_WRITE_GATE, MEMENTO_OUTBOX, MEMENTO_OUTBOX_WORKER, MEMENTO_WM_PG_FALLBACK, MEMENTO_RANK_BEFORE_BUDGET, MEMENTO_RANKING_FIX_V2, MEMENTO_GC_THROUGHPUT, MEMENTO_CONTEXT_ANNOTATE, MEMENTO_PROVENANCE, MEMENTO_REVIEW_QUEUE, MEMENTO_HOOK_ENDPOINTS, MEMENTO_FORGET_CASCADE, MEMENTO_EGRESS_POLICY, MEMENTO_AUDIT_DB, MEMENTO_ADMIN_USERS, MEMENTO_LEXICAL_CHANNEL, MEMENTO_EVENT_TIME_EXTRACT, MEMENTO_DIGEST |
 | mask, reject, off (그 밖의 값은 mask) | MEMENTO_SENSITIVE_SCAN |
 | workspace, key (그 밖의 값은 workspace) | MEMENTO_DEDUP_SCOPE |
 | true, false (false가 아닌 값은 true) | MEMENTO_API_KEY_DELETE_GUARD, MEMENTO_ALLOW_LEGACY_UNBOUND_AGENT_SCOPE, LLM_CONCURRENCY_ENABLED, MCP_REJECT_NONAPIKEY_OAUTH, MEMENTO_DERIVED_FRESHNESS_ENFORCE |
@@ -148,6 +148,7 @@
 | RERANKER_EXTERNAL_FALLBACK | skip | external 리랭커 3회 연속 실패 시 정책. `skip`(기본): in-process 전환 없이 `RERANKER_EXTERNAL_COOLDOWN_MS` 동안 external 호출 자체를 생략하고 원점수(RRF 순서)를 그대로 반환. `inprocess`: ONNX in-process 모드로 전환(opt-in, 이전 동작) |
 | RERANKER_WINDOW | 30 | 리랭커가 다시 줄 세우는 RRF 상위 후보 수(1~100). 재정렬 시간은 이 값에 비례한다(CPU에서 bge-reranker-v2-m3 30건 약 5초). 줄이면 지연은 줄고 뒤쪽 후보 회수가 약해진다 |
 | RERANKER_TOP_K | 15 | 재정렬 뒤 남기는 파편 수(1~100) |
+| RERANKER_MIN_SCORE | 0 | 재정렬 점수 하한(0~1). 0은 끔. 0보다 크면 재정렬 뒤 `rerankerScore`(sigmoid 점수 × 최신성 보정 0.9~1.1)가 이 값보다 낮은 후보를 결과에서 빼고 searchPath에 `RerankFilter:N`을 남긴다. 관련 없는 후보 때문에 리더가 추측하는 것을 줄인다. 리랭커가 동작할 때만 적용된다. 호출 시점에 읽는다 |
 | RERANKER_TIMEOUT_MS | 5000 | 외부 리랭커 호출 타임아웃(ms) |
 | NLI_SERVICE_URL | (없음) | 외부 NLI 서비스 URL. 미설정 시 in-process ONNX |
 | NLI_TIMEOUT_MS | 5000 | 외부 NLI 호출 타임아웃(ms) |
@@ -217,6 +218,8 @@
 | MEMENTO_WM_FALLBACK_MAX_ROWS | 2000 | 작업 기억 대체 경로의 키별 행 수 상한. 키 하나(키 없는 요청은 한 묶음)의 행이 이 값에 닿으면 새 행을 쓰기 전에 그 키의 가장 오래된 행부터 지운다(거부하지 않는다). 동시 쓰기에서는 잠시 몇 행 넘을 수 있다. 1 이상의 정수만 받고 그 밖은 기본값이다. 호출 시점에 읽는다 |
 | MEMENTO_DEDUP_SCOPE | workspace | 같은 본문(content_hash) 중복 판정 범위. `workspace`이면 키(마스터는 키 없음)와 workspace 단위로 판정한다. 같은 키가 다른 workspace에 같은 본문을 쓰면 별도 파편으로 저장하고, 같은 workspace나 전역(workspace 없음) 파편에 같은 본문이 있으면 그 id를 돌려준다. `key`이면 키 단위로 판정해 다른 workspace의 기존 파편 id를 돌려준다. remember, amend, batch_remember, 가져오기에 함께 적용한다. 키 범위 유일 색인(`uq_frag_hash_per_key`, `uq_frag_hash_master`, 또는 같은 정의의 `fragments_new_key_id_content_hash_idx`, `fragments_new_content_hash_idx`)이 남아 있는 키 경로는(무효 상태 포함) 값과 무관하게 키 범위로 판정한다. 새 설치와 운영 DB 모두 `scripts/ops/finish-dedup-scope.mjs --confirm`으로 그 색인을 지워야 workspace 범위가 된다(전환 절차: [operations/online-migration.md](operations/online-migration.md#중복-판정-범위-전환)). 그 색인을 지운 뒤의 `key`는 사전 조회로만 판정하므로 두 workspace에 같은 본문을 동시에 쓰면 둘 다 저장될 수 있다. 호출 시점에 읽는다 |
 | MEMENTO_FORGET_CASCADE | on | forget 삭제 연쇄 스위치. `on`이면 `forget`(id, topic)이 파편을 지우는 트랜잭션에서 대상(키 범위 안)과, 그 대상을 `linked_to`에 가진 서버 기록 모순 해소 파편(topic `contradiction_audit`, `key_id` 없음)을 id 오름차순으로 잠근 뒤 함께 지우고, 같은 문장에서 지운 파편을 `source_fragment_id`로 가진 `case_events`의 `summary`를 `[삭제됨]`으로 바꾼다. 이벤트 행, 유형, 순서, 엣지는 남는다. 커밋 뒤 지운 id 전체의 `fragment_links` 행과 다른 파편 `linked_to`의 참조를 지운다. 응답에는 `purged`(`case_summaries`: 바꾼 요약 수, `audit_fragments`: 함께 지운 해소 기록 수)가 실린다(삭제 단계까지 간 응답에만, 없음, 권한 없음, permanent 보호 응답에는 없다). 새 모순 해소 기록은 두 파편의 본문 대신 id를 담는다. 요약 조회는 `idx_ce_source_fragment_id`(migration-054)를 쓴다. `off`이면 `forget`이 파편 행과 링크만 지우고 요약과 해소 기록이 남으며, 해소 기록은 두 파편 본문의 앞 80자를 담고 응답에 `purged`가 없다. 원본 파편이 없는 요약(스위치가 꺼진 동안의 `forget`, 만료 정리, 병합이 남긴 요약)은 `scripts/purge-orphan-case-summaries.js`로 정리한다([cli.md](cli.md)). 해소 기록인 대상은 자기 행만 지우고, 해소 기록끼리의 `linked_to`(같은 topic 자동 연결)로는 번지지 않는다. 스위치가 꺼진 동안 기록된 해소 기록은 본문 앞 80자를 담고 가리키는 파편이 지워질 때 함께 지워지며, 가리키던 파편이 이미 지워진 해소 기록은 `linked_to`에서 그 id가 빠져 찾을 수 없으므로 사본이 남는다. 호출 시점에 읽는다 |
+| MEMENTO_EVENT_TIME_EXTRACT | on | 사건 시각 추출 스위치. `on`이면 `eventTime`을 주지 않은 쓰기(remember, batch_remember, reflect와 자동 회고가 만드는 파편)가 본문 앞 2000자의 날짜 표현에서 사건 시각을 뽑아 `fragments.event_time`, `event_time_end`, `event_time_precision`(migration-065)에 저장한다. 규칙 기반이며 LLM을 부르지 않는다. 상대 표현은 `mentionTime`, 없으면 저장 시각 기준으로 해석한다. `off`여도 클라이언트가 준 `mentionTime`, `eventTime`, `eventTimeEnd`는 저장한다. 기존 행은 백필하지 않는다. 호출 시점에 읽는다 |
+| MEMENTO_DIGEST | on | 묶음 요약 스위치. `on`이면 정리 주기의 `build_digests` 단계가 topic 시간선(같은 키, workspace, agent, topic의 유효 파편 5개 이상)과 선호 목록(preference 파편 2개 이상)을 규칙으로 만들어 `fragment_digest`(migration-066)에 두고, recall이 집계, 시간, 상태 의도와 선호 질문에 `_meta.evidence.digests`로 싣는다. LLM을 부르지 않으며 요약은 할당량에 세지 않는다. forget 삭제 연쇄가 지운 파편을 출처로 가진 요약을 함께 지운다. `off`이면 만들지도 싣지도 않는다. 호출 시점에 읽는다 |
 | MEMENTO_LOG_STDERR | false | `true`이면 콘솔 로그를 모든 수준에서 표준 오류로 보낸다. CLI(`bin/memento.js`)는 `serve`를 뺀 명령에서 이 값이 없으면 `true`로 정해 표준 출력을 명령 결과에만 쓴다. 로거가 처음 적재될 때 읽는다 |
 | EPISODE_CONTINUITY_CACHE_TTL_MS | 5000 | EpisodeContinuityService가 스코프(`agentId:keyId:scopeType:scopeValue`)별 최근 milestone 이벤트 ID를 보관하는 in-memory 캐시의 TTL(ms). 삽입 순서 기반 LRU이며 최대 1000개 스코프까지 추적한다 |
 
@@ -1412,6 +1415,8 @@ EMBEDDING_DIMENSIONS=768
 | 059 | migration-059-api-key-lifecycle.sql | `api_keys` 수명 열(`expires_at`, `description`, `owner`, `kind`, `allowed_cidrs`, `last_used_ip_hash`, `revoked_at`, `revoked_by`, `revoke_reason`, `access_reviewed_at`, `access_reviewed_by`, 모두 NULL 허용)과 `api_key_secrets` 표(키 해시별 비밀 행, 회전 겹침의 `valid_until`). 배포 뒤 `scripts/ops/backfill-key-secrets.mjs --confirm`으로 현재 키 해시를 옮긴다([operations/online-migration.md](operations/online-migration.md)의 「키 비밀 이관」) |
 | 060 | migration-060-admin-users.sql | `admin_users`, `admin_role_bindings`, `admin_sessions`, `admin_recovery_codes`, `admin_identities` 표(관리자 계정, 역할 바인딩, DB 세션, 복구 코드 해시, OIDC 확장 지점)와 `admin_audit_events.actor_kind`에 `admin` 추가 |
 | 061 | migration-061-synthetic-query-source-version.sql | `fragment_synthetic_query.source_content_hash` 추가. 본문 수정 전 생성된 합성 질의를 검색에서 제외하고 백필로 교체 |
+| 065 | migration-065-fragment-world-time.sql | `fragments`에 nullable 열 `mention_time`, `event_time`, `event_time_end`(timestamptz)와 `event_time_precision`(text)을 더한다. 기존 행은 백필하지 않는다. 색인 `idx_fragments_world_time`(`COALESCE(event_time, mention_time, created_at)`, `valid_to IS NULL` 부분 색인)은 `scripts/ops/online-index.mjs`로 먼저 만든다 |
+| 066 | migration-066-fragment-digest.sql | 묶음 요약 표 `fragment_digest`(key_id, workspace, agent_id, kind, subject, content, source_ids, source_hash, item_count). 범위별 유일 색인, source_ids GIN 색인, fragments와 같은 에이전트·키 격리 RLS 정책 |
 
 ---
 

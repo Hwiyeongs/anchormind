@@ -32,7 +32,7 @@
     "lib/memory/read/CaseRecall.js": 38,
     "lib/memory/read/ContextBuilder.js": 34,
     "lib/memory/read/FragmentReader.js": 48,
-    "lib/memory/read/FragmentSearch.js": 145,
+    "lib/memory/read/FragmentSearch.js": 142,
     "lib/memory/read/GraphNeighborSearch.js": 27,
     "lib/memory/read/HistoryReconstructor.js": 22,
     "lib/memory/write/ConflictResolver.js": 23,
@@ -63,9 +63,9 @@
   },
   "max-lines": {
     "lib/admin/admin-memory.js": 1022,
-    "lib/memory/consolidate/MemoryConsolidator.js": 833,
-    "lib/memory/read/FragmentSearch.js": 847,
-    "lib/tools/memory-schemas.js": 1303
+    "lib/memory/consolidate/MemoryConsolidator.js": 835,
+    "lib/memory/read/FragmentSearch.js": 844,
+    "lib/tools/memory-schemas.js": 1311
   },
   "max-depth": {
     "lib/llm/util/retry-hints.js": 6,

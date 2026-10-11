@@ -36,7 +36,8 @@ const ALLOWED = {
   "admin/ApiKeyLifecycleStore.js": 2, // 회전과 폐기가 api_key_secrets 행을 그 키로 고르는 갱신 2곳(기억 격리 조건이 아님)
   "admin/admin-keys.js": 1,
   "memory/CaseEventStore.js": 2,
-  "memory/consolidate/MemoryConsolidator.js": 3, // linked_to 교체는 잠금 문장과 갱신 문장이 같은 키 조건을 고정 위치로 쓴다
+  "memory/consolidate/MemoryConsolidator.js": 3,
+  "memory/consolidate/DigestBuilder.js": 1, // 묶음 요약 생성이 GROUP BY로 고른 묶음의 키 값을 고정 위치($1)로 다시 고른다. 접근 격리가 아니라 같은 묶음 재조회다 // linked_to 교체는 잠금 문장과 갱신 문장이 같은 키 조건을 고정 위치로 쓴다
   "memory/link/ContradictionDetector.js": 2,
   "memory/read/FragmentReader.js": 1,
   "memory/read/GraphNeighborSearch.js": 1,

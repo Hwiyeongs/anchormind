@@ -2,6 +2,30 @@
 
 ## [Unreleased]
 
+기억이 "언제" 일어난 일인지 구분하고, recall이 답의 근거가 충분한지 알려 준다.
+
+### 업그레이드 주의
+
+- 마이그레이션 두 개가 들어 있다: `migration-065`(파편 시각 열), `migration-066`(요약 표). 먼저 백업하고(`scripts/ops/backup.sh --label pre-migration`), 색인 `idx_fragments_world_time`을 `scripts/ops/online-index.mjs`로 만든 뒤 `npm run migrate`를 실행한다. 기존 파편은 그대로 동작한다.
+- 시간 근접 랭킹과 모순 판정(어느 쪽이 최신인가)이 저장 시각 대신 "말한 시각"을 본다. `mentionTime` 없이 저장된 파편은 둘이 같으므로 결과가 바뀌지 않는다.
+- `forget` 응답의 `purged`에 `digests`가 더해진다.
+- 답 꾸러미의 `policy_id`가 `memento-pack-policy-v1`로 바뀐다.
+
+### Added
+
+- **말한 시각과 사건 시각.** `remember`, `batch_remember`, `amend`가 `mentionTime`(그 말을 한 때)과 `eventTime`(그 일이 일어난 때)을 받는다. `eventTime`을 주지 않으면 본문의 "어제", "2026-03-14", "last week" 같은 표현에서 읽어 낸다(`MEMENTO_EVENT_TIME_EXTRACT`, 기본 on).
+- **시간으로 찾고 줄 세우기.** `recall`의 `timeRange: { basis: "event" }`는 사건 시각으로 기간을 거르고, `order: "chronological"`은 결과를 일어난 순서로 돌려준다.
+- **바뀐 값과 엇갈린 기억 보기.** `includeHistory: true`면 현재 값 바로 뒤에 이전 값이 붙는다. 아직 정리되지 않은 모순은 `conflicts_with`로 표시된다.
+- **근거 점검(`_meta.evidence`).** recall이 근거 상태를 알려 준다: `no_evidence`(찾은 기억 없음), `partial`(질문의 핵심 낱말 일부가 결과에 없음, `uncovered_terms`로 표시), `conflicting`, `supported`. 에이전트는 이 값으로 다시 찾을지, "모른다"고 답할지 정한다.
+- **질문 유형별 근거 묶음.** "몇 번", "언제", "지금도" 같은 질문은 자동으로 알아보고(`intent`), 결과를 시간순 표로 정리해 같은 내용은 한 번만 센다. `intent`를 직접 주면 그 유형에 맞는 기본값(더 많은 후보, 시간순, 이전 값 포함)이 적용된다.
+- **주제별 시간선과 선호 목록.** 정리 주기가 주제마다 기록을 시간순 한 줄씩 모은 요약과, 사용자 선호를 모은 목록을 만든다(`MEMENTO_DIGEST`, 기본 on, LLM 미사용, 할당량 미차감). 여러 대화에 흩어진 기록을 묻는 질문에 함께 실린다. 원본을 지우면 요약도 지워진다.
+- `RERANKER_MIN_SCORE`: 리랭커를 쓸 때 점수가 낮은 후보를 결과에서 뺀다(기본 0, 끔).
+- `scripts/measure/recall-scale.mjs`: 로컬 시험 DB에서 파편 수에 따른 recall 지연을 잰다.
+
+### Changed
+
+- 자연어 검색의 그래프 확장이 키워드 검색 상위뿐 아니라 의미 검색 상위 결과의 연결도 따라간다.
+
 ## [6.3.1] - 2026-10-10
 
 ### 업그레이드 주의

@@ -1045,7 +1045,7 @@ The recall tool searches from the least expensive layer first. If an earlier lay
 
 **L2: PostgreSQL GIN index.** Always executed after L1. A GIN (Generalized Inverted Index) is on the keywords TEXT[] column. Search uses the `keywords && ARRAY[...]` operator -- an operator that checks for array intersection. The GIN index indexes each array element individually, so this operation is processed as an index scan, not a sequential scan.
 
-**L2.5: Graph neighbor expansion.** Collects 1-hop neighbors of the top 5 L2 fragments from fragment_links. Handled by GraphNeighborSearch with a 1.5x RRF weight multiplier. Graph neighbors are only executed when L2 results exist, so the added cost is a single SQL query.
+**L2.5: Graph neighbor expansion.** For text searches, collects 1-hop neighbors from fragment_links of `graph.seedCount` seeds (default 10) taken alternately from the top L2 and L3 fragments, so the links of fragments found only by semantic search also become candidates. Handled by GraphNeighborSearch with a 1.5x RRF weight multiplier. It does not run without seeds, and the added cost is a single SQL query.
 
 **L3: pgvector HNSW cosine similarity.** Triggered only when the recall parameters include a `text` field. Insufficient result count alone does not activate L3. The query text is converted to an embedding vector, and `embedding <=> $1` computes cosine distance. EmbeddingCache caches query embeddings in Redis (key: `emb:q:{sha256 first 16 chars}`, 1-hour TTL), skipping embedding API calls on repeated identical queries. Falls back to the original API on cache failure. All embeddings are L2-normalized unit vectors, so cosine similarity and inner product are equivalent. HNSW indexes quickly find approximate nearest neighbors. The `threshold` parameter sets a similarity floor -- L3 results below this value are excluded. L1/L2-routed results lack a similarity value and are therefore exempt from threshold filtering.
 
@@ -1569,7 +1569,7 @@ FragmentSearch focuses solely on pipeline result generation; side effects are ex
 
 `lib/memory/consolidate/MemoryConsolidator.js`. The stage list is declared as a `stageDefs[]` array with `TOTAL_STAGES = stageDefs.length` computed automatically. Adding a new stage requires only pushing one entry; progress calculation and emit are reflected automatically.
 
-Current 22 stages (in order):
+Current 23 stages (in order):
 
 | # | name | Description |
 |---|---|---|
@@ -1588,13 +1588,14 @@ Current 22 stages (in order):
 | 13 | promote_anchors | Anchor promotion |
 | 14 | detect_contradictions | Contradiction detection |
 | 15 | detect_supersessions | Supersede relation detection |
-| 16 | process_pending_contradictions | Pending contradiction processing |
-| 17 | feedback_report | Feedback report generation |
-| 18 | feedback_calibration | Feedback-based calibration |
-| 19 | prune_keyword_indexes | Keyword index cleanup |
-| 20 | collect_stale_fragments | Stale fragment collection |
-| 21 | purge_stale_reflections | Stale reflect purge |
-| 22 | gc_search_events | Search event GC |
+| 16 | build_digests | Build topic timeline and preference profile digests (`MEMENTO_DIGEST`) |
+| 17 | process_pending_contradictions | Pending contradiction processing |
+| 18 | feedback_report | Feedback report generation |
+| 19 | feedback_calibration | Feedback-based calibration |
+| 20 | prune_keyword_indexes | Keyword index cleanup |
+| 21 | collect_stale_fragments | Stale fragment collection |
+| 22 | purge_stale_reflections | Stale reflect purge |
+| 23 | gc_search_events | Search event GC |
 
 ## batchPool / Primary Pool Split
 

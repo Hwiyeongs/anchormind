@@ -246,6 +246,10 @@ Two options. You can use both.
 
 Injected memories sit below the system prompt and instruction files. Facts work well, such as "we use PostgreSQL 15"; behavior rules, such as "write tests in Given-When-Then," may be ignored if they conflict. Put behavior rules in `CLAUDE.md`, `AGENTS.md`, hooks, or skills.
 
+#### Can the agent tell when memory has no answer?
+
+Check `_meta.evidence.status` in the `recall` response. `no_evidence` means nothing was found; `partial` means some key words of the question are missing from the results (listed in `uncovered_terms`). The agent can search again with those words or answer that it does not remember. Questions such as "how many" or "when" also get the evidence in time order and a per-topic timeline digest.
+
 ### Data and security
 
 #### Where is my memory stored?
@@ -276,7 +280,13 @@ Memory is stored per fragment, so you fix only the wrong fragment with `amend` o
 
 #### What happens when new content contradicts existing content?
 
-The server detects the contradiction and expires the old fragment (anchors are exempt). Nothing is deleted; history stays through `valid_to` and `superseded_by`. The steps are in [Internals](docs/internals.en.md#contradiction-detection-pipeline).
+The server detects the contradiction and expires the old fragment (anchors are exempt). Nothing is deleted; history stays through `valid_to` and `superseded_by`. The steps are in [Internals](docs/internals.en.md#contradiction-detection-pipeline). Which side is newer is decided by when it was said (`mentionTime`, else the storage time).
+
+To see the earlier value, pass `includeHistory: true` to `recall`; the previous value follows the current one. Contradictions that are not settled yet are marked with `conflicts_with`.
+
+#### Does it remember when things happened?
+
+It keeps when something was said and when it happened separately. `remember` accepts `mentionTime` and `eventTime`; without `eventTime` it reads expressions such as "yesterday", "2026-03-14" or "last week" from the content. Use `order: "chronological"` in `recall` for the order of events, and `timeRange: { from, to, basis: "event" }` to filter by when things happened.
 
 #### How do I mark content I am not sure about?
 

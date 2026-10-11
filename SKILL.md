@@ -886,6 +886,9 @@ RBAC default-deny: 등록되지 않은 도구 이름은 `Unknown tool: <name>`(-
 | affect | string | - | 감정 태그. neutral(기본) / frustration / confidence / surprise / doubt / satisfaction |
 | idempotencyKey | string | - | 재시도 안전 식별자. 같은 key_id 범위에서 같은 값으로 반복 호출하면 새 파편을 만들지 않고 기존 id를 반환. 권장 형식 {작업명}-{날짜}-{순번} |
 | origin | string | - | 기억의 출처 주장: user_stated, agent_inferred, tool_output, external_content, consolidation, import. 서버는 이 값과 키 상한(권한 `trusted_origin` 또는 master 키 3, 그 밖 2) 중 작은 값으로 신뢰 등급(0~3)을 정한다. 등급 1 이하(external_content 포함)는 context의 ANCHOR와 CORE 주입에서 빠진다. 허용 밖의 값은 -32602. 미지정이면 출처 없음(등급 2). |
+| mentionTime | string | - | 그 내용을 말한 시각(ISO 8601). 지난 대화를 옮겨 저장할 때 원래 시각을 준다. 생략하면 저장 시각. |
+| eventTime | string | - | 내용이 가리키는 사건 시각(YYYY, YYYY-MM, YYYY-MM-DD, ISO 시각, '어제' 같은 날짜 표현). 생략하면 본문의 날짜 표현에서 뽑는다. |
+| eventTimeEnd | string | - | 구간 사건의 끝 시각(ISO 8601). |
 | dryRun | boolean | - | true 시 저장 없이 할당량·충돌 검사 결과와 실행 계획만 반환 |
 
 품질 게이트: content < 10자, URL만, type+topic null인 경우 거부. content > 4000자면 "content length N exceeds max 4000" 메시지와 함께 -32602로 거부(300자 절삭보다 앞단의 수신 게이트). importance < 0.3이면 경고 + TTL short 자동 설정.
@@ -925,10 +928,13 @@ async 사용 지침: 대량(수십~200건) 일괄 저장에서 호출자 대기�
 | linkRelationType | string | - | 연결 관계 필터 (related, caused_by, resolved_by, part_of, contradicts) |
 | threshold | number | - | similarity 임계값 0~1 |
 | includeSuperseded | boolean | - | 만료 파편 포함. 기본 false. |
+| includeHistory | boolean | - | 결과 파편이 대체한 이전 값을 바로 뒤에 state=superseded로 끼우고 대체한 쪽에 state=current를 단다(최대 5건). 값이 어떻게 바뀌었는지 물을 때 쓴다. 기본 false. |
+| order | string | - | rank(기본, 관련도순) 또는 chronological(사건 시각, 없으면 말한 시각, 없으면 저장 시각 오름차순). 사건 순서를 물을 때 쓴다. |
+| intent | string | - | auto(기본), lookup, aggregate, temporal, state. 응답 `_meta.evidence`에 근거 상태(no_evidence, conflicting, partial, supported), 덮이지 않은 질의 낱말, 묶음 의도면 시간순 근거 묶음과 topic 시간선·선호 목록 요약이 실린다. partial이면 uncovered_terms로 다시 찾고, no_evidence면 기억에 없다고 답한다. |
 | includePeerAgents | boolean | - | master 전용. 같은 키/workspace 범위의 다른 agent 파편 포함. 일반 API 키는 권한 오류. 기본 false. |
 | includeKeyName | boolean | X | true 시 각 파편에 key_id·key_name(액세스 키 라벨) 포함. 같은 키 그룹 스코프의 정보만 노출. 팀 공유 workspace에서 파편 생성 주체 식별용. 기본 false |
 | asOf | string | - | ISO 8601. 해당 시점에 가까운 파편을 상위로 올리는 시간 근접 랭킹 기준(anchorTime)으로만 작동. 주의: 그 시점에 유효했던 버전을 복원하는 bitemporal as-of 필터가 아니며, 과거 시점 스냅샷 조회는 미구현. 특정 기간의 파편을 실제로 한정하려면 timeRange를 쓴다. |
-| timeRange | object | - | {from, to} 생성시각(created_at) 기준 시간창 필터. ISO 8601과 한국어 자연어("3일 전","지난 주","오늘") 모두 지원. 지정 시 시간 검색 경로가 동작하고 RRF에서 시간 근접 가중이 부스트된다. |
+| timeRange | object | - | {from, to, basis} 시간창 필터. basis=created(기본)는 생성시각(created_at), basis=event는 사건 시각(event_time, 없으면 mention_time, 없으면 created_at) 기준. ISO 8601과 한국어 자연어("3일 전","지난 주","오늘") 모두 지원. 지정 시 시간 검색 경로가 동작하고 RRF에서 시간 근접 가중이 부스트된다. |
 | cursor | string | - | 페이지네이션 커서 |
 | pageSize | number | - | 기본 20, 최대 50 |
 | excludeSeen | boolean | - | context()에서 주입된 파편 제외. 기본 true. |
@@ -1001,6 +1007,7 @@ fromId 또는 toId가 타 테넌트 소유 파편인 경우 `"Fragment not found
 | resolutionStatus | string | - | 케이스 해결 상태 변경 (open / resolved / abandoned). case_id 보유 파편은 resolved 전환 시 case_closed 이벤트가 자동 기록된다 |
 | outcome | string | - | 케이스 종결 결과 요약. resolutionStatus='resolved'와 함께 기록 |
 | phase | string | - | 작업 단계 변경 (planning, debugging, implementation, verification 등) |
+| mentionTime, eventTime, eventTimeEnd | string | - | 말한 시각과 사건 시각 수정. 준 값만 해석하며 eventTimeEnd는 eventTime과 함께 줄 때만 받는다 |
 | agentId | string | - | 에이전트 ID |
 | dryRun | boolean | - | true 시 실제 변경 없이 패치 적용 후 예상 파편 상태만 반환 |
 

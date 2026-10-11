@@ -141,7 +141,7 @@ export const MEMORY_CONFIG = {
   },
   /** L2.5 그래프 이웃 검색 설정 */
   graph: {
-    seedCount     : 10,       // L2 상위 N개 파편을 그래프 시드로 사용
+    seedCount     : 10,       // L2와 L3 상위 파편을 번갈아 고른 N개를 그래프 시드로 사용
     relationBoosts: {
       caused_by    : 1.5,
       resolved_by  : 1.5,

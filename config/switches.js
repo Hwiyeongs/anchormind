@@ -90,6 +90,8 @@ export const SWITCHES = Object.freeze([
   enumOf("MEMENTO_ANCHOR_PERMISSION", ["off", "warn", "enforce"], "warn", "쓰기 경로", "anchor 권한이 없거나 키별 상한에 이른 키의 앵커 요청을 일반 파편으로 저장하고 경고하거나(warn) 거부한다(enforce)", { off: ["off"], exception: "보안 집행" }),
   enumOf("MEMENTO_DEDUP_SCOPE", ["workspace", "key"], "workspace", "쓰기 경로", "같은 본문 중복 판정을 키와 workspace 단위로 한다(key는 키 단위)", { off: ["key"] }),
   enumOf("MEMENTO_FORGET_CASCADE", ["on", "off"], "on", "쓰기 경로", "forget이 같은 트랜잭션에서 case_events 요약 사본과 모순 해소 기록을 지우고 purged 건수를 알린다", { off: ["off"] }),
+  enumOf("MEMENTO_EVENT_TIME_EXTRACT", ["on", "off"], "on", "쓰기 경로", "eventTime이 없는 쓰기가 본문의 날짜 표현에서 사건 시각을 뽑아 저장한다", { off: ["off"] }),
+  enumOf("MEMENTO_DIGEST", ["on", "off"], "on", "검색", "정리 주기가 topic 시간선과 선호 목록 요약을 만들고 recall이 집계, 시간, 상태, 선호 질문에 싣는다", { off: ["off"] }),
 
   /* 저장소와 캐시 */
   boolOff("REDIS_ENABLED", "저장소", "Redis를 쓴다(L1 검색, 세션, 캐시)"),

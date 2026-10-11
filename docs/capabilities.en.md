@@ -23,6 +23,9 @@ Names in parentheses are the environment variables that turn each feature on or 
 - Local embeddings: `EMBEDDING_PROVIDER=transformers` creates embeddings without an external API. The default model is `Xenova/multilingual-e5-small` (384 dimensions).
 - Affect tags: tag fragments with `affect` (neutral, frustration, confidence, surprise, doubt, satisfaction) and filter searches by that tag.
 - Search hints: `_meta.suggestion` in the `recall` response flags inefficient queries: repeated queries, empty results without context, a large `limit` without a budget, and noisy queries without a type. You can ignore it.
+- Time awareness: when something was said (`mentionTime`) and when it happened (`eventTime`) are stored separately; without them, dates are read from the content. `recall` filters by event time (`timeRange.basis: "event"`) and sorts by the order of events (`order: "chronological"`) (`MEMENTO_EVENT_TIME_EXTRACT`).
+- Evidence check: `_meta.evidence` in the `recall` response reports the evidence status (`no_evidence`, `partial`, `conflicting`, `supported`) and the question words missing from the results. Questions such as "how many" or "when" also get the evidence as a time-ordered table.
+- Changed values and conflicting memories: `includeHistory` adds the previous value after the current one, and unsettled contradictions are marked with `conflicts_with`.
 
 ### Keeping memory tidy by itself
 
@@ -31,6 +34,7 @@ Names in parentheses are the environment variables that turn each feature on or 
 - Duplicate judgment: identical text counts as one within a key and workspace. If it already exists, the `remember` response includes the existing fragment id in `duplicate_of` (`MEMENTO_DEDUP_SCOPE`).
 - Cascading delete: `forget` also deletes case summaries built from that fragment and body copies in contradiction-resolution records, all in the same transaction (`MEMENTO_FORGET_CASCADE`).
 - Morpheme index check: fragments with unfinished morpheme indexing are left out of morpheme search automatically.
+- Topic digests: consolidation builds a time-ordered timeline per topic and a list of user preferences, attached to questions that span many conversations. No LLM call, not counted toward the quota (`MEMENTO_DIGEST`).
 
 ### Deciding who can see what
 

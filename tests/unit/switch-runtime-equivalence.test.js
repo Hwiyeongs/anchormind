@@ -55,6 +55,8 @@ const RUNTIME = {
   MEMENTO_PROVENANCE:                       "cfg.provenanceEnabled() ? 'on' : 'off'",
   MEMENTO_REVIEW_QUEUE:                     "cfg.reviewQueueEnabled() ? 'on' : 'off'",
   MEMENTO_LEXICAL_CHANNEL:                  "cfg.lexicalChannelEnabled() ? 'on' : 'off'",
+  MEMENTO_EVENT_TIME_EXTRACT:               "cfg.eventTimeExtractEnabled() ? 'on' : 'off'",
+  MEMENTO_DIGEST:                           "cfg.digestEnabled() ? 'on' : 'off'",
   MEMENTO_LOG_STDERR:                       "cfg.logToStderr()",
   MEMENTO_OUTBOX:                           "cfg.outboxEnabled() ? 'on' : 'off'",
   MEMENTO_EGRESS_POLICY:                    "cfg.egressPolicyEnabled() ? 'on' : 'off'",

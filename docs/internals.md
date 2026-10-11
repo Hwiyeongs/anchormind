@@ -146,13 +146,14 @@ memory_consolidate 도구가 실행되거나 서버 내부 스케줄러(6시간 
 13. `promote_anchors` — access_count >= 10 + importance >= 0.8 파편을 `is_anchor=true`로 승격. `MEMENTO_AUTO_PROMOTE_ANCHORS=false`이면 이 stage만 `disabled_by_config` 사유로 건너뛴다(기본 true).
 14. `detect_contradictions`: 3단계 하이브리드 모순 탐지. pgvector cosine > 0.85 후보 추출 → mDeBERTa NLI → Gemini CLI 에스컬레이션. 모순이면 `contradicts` 링크를 걸고 오래된 쪽의 importance를 절반으로 낮춘 뒤 `superseded_by`로 닫는다. 오래된 쪽이 앵커면 닫지 않는다. 해소 기록은 `contradiction_audit` topic에 남기며 이 topic은 모순·대체 탐지 대상에서 빠진다. 기록 함수는 `MemoryManager`가 `MemoryConsolidator`에 주입한 `rememberAudit` 콜백이며 `ContradictionDetector`는 facade를 import하지 않는다. 콜백이 없거나 기록에 실패해도 해소 결과는 유지된다. 결과는 `nliResolvedDirectly`, `nliSkippedAsNonContra`로 분리 반환
 15. `detect_supersessions`: 임베딩 유사도 0.7~0.85 구간 파편 쌍에 대해 Gemini CLI로 대체 관계 판단. GraphLinker는 유사도만으로 대체 관계를 만들지 않고 0.7 초과 후보를 `related`로만 잇는다. 파편 대체는 이 판정과 remember의 명시 `supersedes` 인자로만 일어난다
-16. `process_pending_contradictions` — Gemini CLI 가용 시 Redis pending 큐에서 최대 10건 꺼내 재판정
-17. `feedback_report` — tool_feedback/task_feedback 집계 리포트 생성. 무관 판정이 1건 이상이면 원인(not_stored/search_miss/scope_leak/topic_mismatch/other/미보고) 분포 표를 덧붙이고, 작업 레벨 통계에는 outcome 분포·outcome 보고 세션 수·human 판정 세션 수·미충족 요구사항 보유 세션 수를 포함한다. outcome 미보고가 있으면 과대 해석 경고를, 성공 비율 100%인데 미보고가 보고보다 많으면 자기보고 편향 주의 문구를 남긴다
-18. `feedback_calibration` — 최근 7일 tool_feedback을 세션별로 집계한 뒤 `feedbackFactor(allRelevant, allSufficient)` 순수함수(lib/memory/consolidate/feedbackFactor.js)로 importance 보정 계수를 결정한다. POSITIVE(allRelevant=true AND allSufficient=true): ×1.1, MIXED(allRelevant=true AND allSufficient=false): ×0.95, NEGATIVE(allRelevant=false): ×0.85. `is_anchor=true` 제외, 클리핑 [0.05, 1.0]
-19. `prune_keyword_indexes` — Redis 고아 키워드 인덱스 제거
-20. `collect_stale_fragments` — 검증 주기 초과 파편 목록 수집, results.stale_fragments에 기록
-21. `purge_stale_reflections`: topic='session_reflect' 파편 중 type별 최신 5개만 보존, 30일 경과 + importance < 0.55인 나머지 삭제(1회 최대 30건)
-22. `gc_search_events` — 오래된 검색 이벤트 GC
+16. `build_digests`: topic별 유효 파편이 5개 이상인 묶음의 시간선과 preference 파편 2개 이상인 묶음의 선호 목록을 규칙으로 만들어 `fragment_digest`(migration-066)에 둔다. LLM을 부르지 않는다. 출처 id와 content_hash로 만든 해시가 같으면 다시 쓰지 않고, 이번 주기에 다시 쓰지 않았으며 출처가 하나라도 유효하지 않은 요약은 지운다. 한 주기에 최근 활동 순 200개 묶음까지 다룬다. `MEMENTO_DIGEST=off`이면 건너뛴다
+17. `process_pending_contradictions` — Gemini CLI 가용 시 Redis pending 큐에서 최대 10건 꺼내 재판정
+18. `feedback_report` — tool_feedback/task_feedback 집계 리포트 생성. 무관 판정이 1건 이상이면 원인(not_stored/search_miss/scope_leak/topic_mismatch/other/미보고) 분포 표를 덧붙이고, 작업 레벨 통계에는 outcome 분포·outcome 보고 세션 수·human 판정 세션 수·미충족 요구사항 보유 세션 수를 포함한다. outcome 미보고가 있으면 과대 해석 경고를, 성공 비율 100%인데 미보고가 보고보다 많으면 자기보고 편향 주의 문구를 남긴다
+19. `feedback_calibration` — 최근 7일 tool_feedback을 세션별로 집계한 뒤 `feedbackFactor(allRelevant, allSufficient)` 순수함수(lib/memory/consolidate/feedbackFactor.js)로 importance 보정 계수를 결정한다. POSITIVE(allRelevant=true AND allSufficient=true): ×1.1, MIXED(allRelevant=true AND allSufficient=false): ×0.95, NEGATIVE(allRelevant=false): ×0.85. `is_anchor=true` 제외, 클리핑 [0.05, 1.0]
+20. `prune_keyword_indexes` — Redis 고아 키워드 인덱스 제거
+21. `collect_stale_fragments` — 검증 주기 초과 파편 목록 수집, results.stale_fragments에 기록
+22. `purge_stale_reflections`: topic='session_reflect' 파편 중 type별 최신 5개만 보존, 30일 경과 + importance < 0.55인 나머지 삭제(1회 최대 30건)
+23. `gc_search_events` — 오래된 검색 이벤트 GC
 
 ### compressOldFragments (KNN 배치 병렬화)
 
@@ -727,7 +728,7 @@ MCP 2026-07-28 개정을 먼저 시도하는 클라이언트는 400 본문이 �
 `_resolveMode(req, msg, dbDefaultMode, keyId)` 함수가 아래 순서로 mode를 결정한다:
 
 1. `X-Memento-Mode` 요청 헤더 (최우선) — 등록된 프리셋이면 적용, 아니면 null
-2. `initialize` 요청의 `params.mode` 필드
+3. `initialize` 요청의 `params.mode` 필드
 3. `api_keys.default_mode` DB 컬럼 값 (migration-034)
 
 결정된 mode는 세션 객체에 저장되어 이후 모든 요청에 재사용된다.
@@ -799,7 +800,7 @@ Bearer 토큰 원문은 저장하지 않는다. sha256 단축 해시만 키로 �
 
 **세션 재사용 흐름:**
 
-1. `initialize` 요청 수신 시 `deriveTokenKey`로 tokenKey 파생
+2. `initialize` 요청 수신 시 `deriveTokenKey`로 tokenKey 파생
 2. `getSessionIdByToken(tokenKey)` → Redis에서 기존 sessionId 조회
 3. 기존 세션이 유효하면 해당 sessionId로 응답 (새 세션 생성 없음)
 4. 기존 세션이 없거나 만료됐으면 새 세션 생성 후 `bindTokenToSession(tokenKey, sessionId, ttlSec)` 호출

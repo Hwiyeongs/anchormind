@@ -23,6 +23,9 @@ AnchorMind가 제공하는 기능, 응답 메타, 선택 모듈, 기술 스택�
 - 로컬 임베딩: `EMBEDDING_PROVIDER=transformers`로 외부 API 없이 임베딩을 만든다. 기본 모델은 `Xenova/multilingual-e5-small`(384차원)이다.
 - 정서 태그: 파편에 `affect`(neutral, frustration, confidence, surprise, doubt, satisfaction)를 붙이고 이 값으로 걸러 검색한다.
 - 검색 제안: `recall` 응답의 `_meta.suggestion`이 비효율적인 질의를 알려 준다. 반복 질의, 맥락 없는 빈 결과, 예산 없는 큰 `limit`, 유형을 지정하지 않은 잡음 질의가 대상이며 무시해도 된다.
+- 시각 구분: 그 말을 한 때(`mentionTime`)와 그 일이 일어난 때(`eventTime`)를 따로 저장한다. 주지 않으면 본문의 날짜 표현에서 읽는다. `recall`은 사건 시각으로 기간을 거르고(`timeRange.basis: "event"`) 일어난 순서로 줄 세운다(`order: "chronological"`) (`MEMENTO_EVENT_TIME_EXTRACT`).
+- 근거 점검: `recall` 응답의 `_meta.evidence`가 근거 상태(`no_evidence`, `partial`, `conflicting`, `supported`)와 결과에 없는 질문 낱말을 알려 준다. "몇 번", "언제" 같은 질문에는 근거를 시간순 표로 정리해 싣는다.
+- 바뀐 값과 엇갈린 기억: `includeHistory`로 현재 값 뒤에 이전 값을 붙이고, 정리되지 않은 모순은 `conflicts_with`로 표시한다.
 
 ### 기억을 스스로 정리한다
 
@@ -31,6 +34,7 @@ AnchorMind가 제공하는 기능, 응답 메타, 선택 모듈, 기술 스택�
 - 중복 판정: 같은 본문은 키와 workspace 안에서 하나로 본다. 이미 있으면 `remember` 응답의 `duplicate_of`에 기존 파편 id가 실린다 (`MEMENTO_DEDUP_SCOPE`).
 - 연쇄 삭제: `forget`은 그 파편에서 만들어진 사례 요약과 모순 해소 기록의 본문 사본도 같은 트랜잭션에서 지운다 (`MEMENTO_FORGET_CASCADE`).
 - 형태소 색인 확인: 형태소 색인이 끝나지 않은 파편은 형태소 검색에서 자동으로 빠진다.
+- 주제별 요약: 정리 주기가 주제마다 기록을 시간순으로 모은 시간선과 사용자 선호 목록을 만들고, 여러 대화에 걸친 질문에 함께 싣는다. LLM을 쓰지 않으며 할당량에 세지 않는다 (`MEMENTO_DIGEST`).
 
 ### 누가 무엇을 볼 수 있는지 정한다
 
