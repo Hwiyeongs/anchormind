@@ -8,7 +8,8 @@
 
 ### 업그레이드 주의
 
-- 마이그레이션 두 개가 들어 있다: `migration-065`(파편 시각 열), `migration-066`(요약 표). 먼저 백업하고(`scripts/ops/backup.sh --label pre-migration`), 색인 `idx_fragments_world_time`을 `scripts/ops/online-index.mjs`로 만든 뒤 `npm run migrate`를 실행한다. 기존 파편은 그대로 동작한다.
+- 마이그레이션 두 개가 들어 있다: `migration-065`(파편 시각 열), `migration-066`(요약 표). 먼저 백업하고(`scripts/ops/backup.sh --label pre-migration`) `npm run migrate`를 실행한다. 기존 파편은 그대로 동작한다.
+- `migration-065`는 색인 `idx_fragments_world_time`도 만들며, 만드는 동안 파편 쓰기가 잠시 멈춘다. 파편이 많아 이를 피하려면 migration-065의 `ALTER TABLE` 문을 먼저 실행하고, `scripts/ops/online-index.mjs`(또는 `CREATE INDEX CONCURRENTLY`)로 색인을 만든 뒤 `npm run migrate`를 실행한다.
 - 시간 근접 랭킹과 모순 판정(어느 쪽이 최신인가)이 저장 시각 대신 "말한 시각"을 본다. `mentionTime` 없이 저장된 파편은 둘이 같으므로 결과가 바뀌지 않는다.
 - `forget` 응답의 `purged`에 `digests`가 더해진다.
 - 답 꾸러미의 `policy_id`가 `memento-pack-policy-v1`로 바뀐다.
