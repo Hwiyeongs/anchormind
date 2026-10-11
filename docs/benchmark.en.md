@@ -249,6 +249,77 @@ The 95% confidence intervals of the overall MiniMax accuracy at k=10 and k=50 do
 - These results cannot be compared directly with evaluations that use a different reader or grading model. Scores published by other systems differ in reader, grading model and number of retrieved memories.
 - Grading is a single run and the grading models are not gpt-5. Read token F1, the official metric, alongside.
 
+## MemBench
+
+Based on [MemBench](https://arxiv.org/abs/2506.21605). Each step of a conversation or observation record is stored as one fragment, the top 10 are retrieved for the question, and the benchmark's own prompts answer the four-option question. The reader is deepseek-flash and segment search is on. The metrics are accuracy and the share of target steps found among the retrieved fragments (target-step recall). The raw data files were used, which approximates the paper's short setting without added noise. One of 470 questions got no answer from the reader and is excluded, so the base is 469 questions.
+
+| Group | n | Accuracy (95% CI) | Target-step recall |
+|-------|---|-------------------|--------------------|
+| **Overall** | 469 | **0.859 (0.825-0.888)** | 0.860 |
+| First-person low-level | 159 | 0.843 | 0.766 |
+| First-person high-level | 40 | 0.850 | 0.832 |
+| Third-person low-level | 230 | 0.878 | 0.913 |
+| Third-person high-level | 40 | 0.825 | 0.949 |
+
+| Category | n | Accuracy | Target-step recall |
+|----------|---|----------|--------------------|
+| Single-session-assistant | 30 | 1.000 | 1.000 |
+| Single-hop | 70 | 0.986 | 0.976 |
+| Comparative | 50 | 0.940 | 0.990 |
+| Post-processing | 70 | 0.900 | 0.811 |
+| Multi-hop | 69 | 0.870 | 0.794 |
+| Preference | 60 | 0.850 | 0.899 |
+| Emotion | 20 | 0.800 | 0.867 |
+| Knowledge-updating | 40 | 0.750 | 0.750 |
+| Multi-session-assistant | 10 | 0.700 | 0.873 |
+| Aggregative | 50 | 0.600 | 0.676 |
+
+- Questions that need one or two steps score 0.94 or higher.
+- Recall falls first on Aggregative (0.600) and Multi-hop (0.870), which need scattered facts to be gathered. The top 10 does not hold every needed step.
+- Categories have 10-70 questions, so the intervals are wide. Multi-session-assistant has n=10.
+
+## BEAM
+
+Based on [BEAM](https://arxiv.org/abs/2510.27246) (ICLR 2026), 100K split: 20 conversations, 400 questions (10 abilities x 2 per conversation). User/assistant pairs are stored as fragments (pairs over 1,000 characters are split), the top 50 are retrieved once per question, and the benchmark's own RAG prompt answers from the top 10, 24 and 50. The official RAG baseline uses the top 5 pairs, whose text volume equals about 24 fragments, so k=24 is the primary column. Answers are graded with the benchmark's per-ability rubric evaluators by MiniMax-M3.1-Flash-Preview and claude-sonnet-5-5 separately, in place of the official judge (gpt-4.1-mini). Aggregation follows the official script (per-conversation ability mean, mean over conversations, mean over the 10 abilities); event_ordering uses tau_norm.
+
+| Ability | MiniMax k=24 | Claude k=24 |
+|---------|--------------|-------------|
+| preference_following | 0.800 | 0.708 |
+| information_extraction | 0.737 | 0.711 |
+| knowledge_update | 0.544 | 0.519 |
+| instruction_following | 0.537 | 0.463 |
+| multi_session_reasoning | 0.505 | 0.472 |
+| abstention | 0.550 | 0.500 |
+| temporal_reasoning | 0.450 | 0.419 |
+| summarization | 0.402 | 0.300 |
+| event_ordering | 0.248 | 0.179 |
+| contradiction_resolution | 0.234 | 0.156 |
+
+| Overall (mean of 10 abilities, 95% CI) | k=10 | k=24 | k=50 |
+|------|------|------|------|
+| MiniMax | 0.481 | **0.501 (0.461-0.536)** | 0.490 |
+| Claude | 0.420 | **0.443 (0.404-0.479)** | 0.431 |
+
+- Both judges agree on ranking and trend; the mean absolute score difference over 1,200 answers is 0.077.
+- Going from k=24 to k=50 does not raise the score. The answering stage, not the amount retrieved, is the limit.
+- These are not scored by the official judge, so they cannot be compared directly with scores in the paper.
+
+## MemoryAgentBench FactConsolidation
+
+FactConsolidation from the Conflict Resolution task of [MemoryAgentBench](https://github.com/HUST-AI-HYZ/MemoryAgentBench). Contexts that contain updated facts are stored in serial order, and each of the 100 questions is answered from the top 20 and top 50. Prompts follow the official RAG setting and scoring is substring exact match. sh (single-hop) was measured at 6k, 32k, 64k and 262k, and mh (multi-hop) at 6k. mh 32k, 64k and 262k are not measured because the reader returned no answer for some questions.
+
+| Row | Stored fragments | k=20 (95% CI) | k=50 (95% CI) |
+|-----|------------------|---------------|---------------|
+| sh 6k | 27 | 0.99 (0.946-0.998) | 1.00 (0.963-1.000) |
+| sh 32k | 141 | 0.89 (0.814-0.937) | 0.96 (0.902-0.984) |
+| sh 64k | 282 | 0.90 (0.826-0.945) | 0.91 (0.838-0.952) |
+| sh 262k | 1,153 | 0.75 (0.657-0.825) | 0.77 (0.678-0.842) |
+| mh 6k | 27 | 0.82 (0.733-0.883) | 0.92 (0.850-0.959) |
+
+- Accuracy falls as the context grows (sh 6k 0.99 to 262k 0.75).
+- At 6k, mh (0.82) is lower than sh (0.99). Questions that chain several facts are harder.
+- k=50 is mostly higher than k=20, but at sh 64k and sh 262k the difference is within the confidence interval.
+
 ## Offline goldset measurement (2026-08-28)
 
 Unlike LongMemEval-S, which requires an external dataset and a separate harness, this measurement ships with the repository so a change can be compared before and after immediately. Measurement conditions differ, so these numbers are not directly comparable to the LongMemEval figures above.
