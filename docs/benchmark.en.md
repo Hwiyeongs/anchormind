@@ -304,24 +304,6 @@ Based on [BEAM](https://arxiv.org/abs/2510.27246) (ICLR 2026), 100K split: 20 co
 - Going from k=24 to k=50 does not raise the score. The answering stage, not the amount retrieved, is the limit.
 - These are not scored by the official judge, so they cannot be compared directly with scores in the paper.
 
-## MemoryAgentBench FactConsolidation
-
-Eight rows of FactConsolidation from the Conflict Resolution task of [MemoryAgentBench](https://github.com/HUST-AI-HYZ/MemoryAgentBench): sh (single-hop) and mh (multi-hop) at 6k, 32k, 64k and 262k. Contexts that contain updated facts are stored in serial order, and each row's 100 questions are answered from the top 20 and top 50. Prompts follow the official RAG setting and scoring is substring exact match. Segment search is on. The reader is deepseek-flash for sh and MiniMax-M3 (thinking mode off) for mh.
-
-| Row | Stored fragments | k=20 (95% CI) | k=50 (95% CI) |
-|-----|------------------|---------------|---------------|
-| sh 6k | 27 | 0.99 (0.946-0.998) | 1.00 (0.963-1.000) |
-| sh 32k | 141 | 0.89 (0.814-0.937) | 0.96 (0.902-0.984) |
-| sh 64k | 282 | 0.90 (0.826-0.945) | 0.91 (0.838-0.952) |
-| sh 262k | 1,153 | 0.75 (0.657-0.825) | 0.77 (0.678-0.842) |
-| mh 6k | 27 | 0.15 (0.093-0.233) | 0.12 (0.070-0.198) |
-| mh 32k | 141 | 0.09 (0.048-0.162) | 0.06 (0.028-0.125) |
-| mh 64k | 282 | 0.12 (0.070-0.198) | 0.11 (0.063-0.186) |
-| mh 262k | 1,153 | 0.04 (0.016-0.098) | 0.08 (0.041-0.150) |
-
-- sh falls as the context grows (0.99 at 6k to 0.75 at 262k).
-- mh scores depend heavily on the reader. The same mh 6k answered by deepseek-flash scores 0.82 at k=20 and 0.92 at k=50, against 0.15 and 0.12 for MiniMax-M3 with thinking off. Multi-hop needs reasoning over several facts, so a reader without thinking scores low. Compare mh rows only within one reader, and do not compare sh and mh directly.
-
 ## Offline goldset measurement (2026-08-28)
 
 Unlike LongMemEval-S, which requires an external dataset and a separate harness, this measurement ships with the repository so a change can be compared before and after immediately. Measurement conditions differ, so these numbers are not directly comparable to the LongMemEval figures above.
