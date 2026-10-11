@@ -16,14 +16,15 @@ export function renderOverviewCards(stats) {
   const cards  = [
     { label: "총 파편 수",    value: fmt(stats.fragments),             icon: "database" },
     { label: "활성 세션",     value: fmt(stats.sessions),              icon: "groups" },
-    { label: "오늘 API 호출",  value: fmt(stats.apiCallsToday),         icon: "api" },
+    { label: "오늘 요청 수",   value: fmt(stats.apiCallsToday),         icon: "api" },
+    { label: "오늘 도구 호출", value: fmt(stats.toolCallsToday),        icon: "build" },
     { label: "활성 키",       value: fmt(stats.activeKeys),            icon: "vpn_key" },
     { label: "DB 크기",       value: stats.system?.dbSizeBytes ? fmtBytes(stats.system.dbSizeBytes) : "--", icon: "storage" },
     { label: "Redis 상태",    value: stats.redis ?? "unknown",         icon: "memory" }
   ];
 
   const grid = document.createElement("div");
-  grid.className = "grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8";
+  grid.className = "grid grid-cols-1 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8";
 
   cards.forEach(c => {
     const card = document.createElement("div");

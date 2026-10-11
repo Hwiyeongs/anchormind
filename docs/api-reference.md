@@ -33,7 +33,7 @@ MCP 도구 상세는 [SKILL.md](../SKILL.md) 참조.
 | GET | /v1/internal/model/nothing/assets/* | Admin 정적 파일 (admin.css, admin.js). 인증 불필요 |
 | GET | /v1/internal/model/nothing/images/* | Admin 이미지 파일. 마스터 키 인증 필요 |
 | POST | /v1/internal/model/nothing/auth | 마스터 키 검증 엔드포인트(관리자 계정 로그인은 아래 「관리자 계정」). IP 기준 rate limit 적용(`/keys` POST, `/import` POST, `/me` GET, `/me/explain` GET도 같다). `MEMENTO_ADMIN_AUTH_BACKOFF=on`이면 연속 5회 실패 뒤 다음 시도를 1, 2, 4초 순으로 최대 60초까지 늦추고 지연 중에는 올바른 키도 429와 `Retry-After`를 받는다 |
-| GET | /v1/internal/model/nothing/stats | 대시보드 통계 (파편 수, API 호출량, 시스템 메트릭, searchMetrics, observability, queues, healthFlags, switches) |
+| GET | /v1/internal/model/nothing/stats | 대시보드 통계 (파편 수, 오늘 요청 수 `apiCallsToday`, 오늘 도구 호출 수 `toolCallsToday`, 시스템 메트릭, searchMetrics, observability, queues, healthFlags, switches) |
 | GET | /v1/internal/model/nothing/activity | 최근 파편 활동 로그 (10건) |
 | GET | /v1/internal/model/nothing/metrics-summary | 대시보드 메트릭 요약 |
 | GET | /v1/internal/model/nothing/keys | API 키 목록 조회. 정책 열(`default_mode`, `allowed_workspaces`, `symbolic_hard_gate`)과 수명 열(`expires_at`, `description`, `owner`, `kind`, `allowed_cidrs`, `revoked_at`, `revoked_by`, `revoke_reason`, `access_reviewed_at`, `access_reviewed_by`, 회전 겹침 종료 시각 `rotation_overlap_until`)을 포함한다 |
@@ -43,7 +43,7 @@ MCP 도구 상세는 [SKILL.md](../SKILL.md) 참조.
 | POST | /v1/internal/model/nothing/keys/:id/rotate | 새 원시 키 발급(응답에서 단 1회). 이전 키는 `graceHours` 동안 유효. 아래 키 수명 절 참조 |
 | POST | /v1/internal/model/nothing/keys/:id/revoke | 키와 모든 비밀 폐기. 본문 `{ "reason": "..." }` 필수. 되돌릴 수 없다 |
 | POST | /v1/internal/model/nothing/keys/:id/access-review | 접근 검토 서명(검토 시각과 행위자) 기록 |
-| GET | /v1/internal/model/nothing/keys/:id/stats | API 키별 사용 통계 |
+| GET | /v1/internal/model/nothing/keys/:id/stats | API 키별 사용 통계. 파편 분포와 함께 `usage`(최근 30일 요청 수 `requests30d`, 도구 호출 수 `toolCalls7d`·`toolCalls30d`, 도구별 `byTool30d`, `lastToolCallDate`, 일별 `daily`)를 싣는다. 요청 수는 접속과 도구 목록 조회까지 세고, 도구 호출 수는 실제로 도구를 부른 횟수만 센다 |
 | PUT | /v1/internal/model/nothing/keys/:id/daily-limit | API 키 일일 호출 제한 변경. 마스터 키 인증 필요 |
 | PUT | /v1/internal/model/nothing/keys/:id/permissions | API 키 권한 변경. 허용 값은 POST와 같다(`read`, `write` 중 하나 이상, 선택 표지 권한 `trusted_origin`, `anchor`, `review_off`, `review_all`). 빈 배열과 표지 권한만 있는 배열은 400이다. `anchor`가 있는 키만 앵커를 지정할 수 있다(`MEMENTO_ANCHOR_PERMISSION`). `trusted_origin`이 있는 키는 remember의 `origin` 주장으로 신뢰 등급 3까지 쓸 수 있고, 없는 키는 2가 상한이다(`MEMENTO_PROVENANCE`). 검토 방식 표지 `review_off`, `review_all`은 둘 중 하나만 둘 수 있고 둘 다 있으면 400이다(`MEMENTO_REVIEW_QUEUE`). 변경 전후 권한을 감사 로그에 남긴다 |
 | PUT | /v1/internal/model/nothing/keys/:id/fragment-limit | API 키 파편 할당량 변경 |

@@ -1417,6 +1417,7 @@ EMBEDDING_DIMENSIONS=768
 | 061 | migration-061-synthetic-query-source-version.sql | `fragment_synthetic_query.source_content_hash` 추가. 본문 수정 전 생성된 합성 질의를 검색에서 제외하고 백필로 교체 |
 | 065 | migration-065-fragment-world-time.sql | `fragments`에 nullable 열 `mention_time`, `event_time`, `event_time_end`(timestamptz)와 `event_time_precision`(text)을 더한다. 기존 행은 백필하지 않는다. 색인 `idx_fragments_world_time`(`COALESCE(event_time, mention_time, created_at)`, `valid_to IS NULL` 부분 색인)도 만든다. 쓰기 정지 없이 만들려면 열 추가 문을 먼저 실행하고 `scripts/ops/online-index.mjs`로 색인을 만든 뒤 마이그레이션을 실행한다 |
 | 066 | migration-066-fragment-digest.sql | 묶음 요약 표 `fragment_digest`(key_id, workspace, agent_id, kind, subject, content, source_ids, source_hash, item_count). 범위별 유일 색인, source_ids GIN 색인, fragments와 같은 에이전트·키 격리 RLS 정책 |
+| 067 | migration-067-api-key-tool-calls.sql | `api_key_usage`에 `tool_call_count`(그날 도구 호출 수)와 `tool_calls`(도구별 호출 수, JSONB)를 더한다. 일일 한도 판정에 쓰는 `call_count`는 그대로다 |
 
 ---
 

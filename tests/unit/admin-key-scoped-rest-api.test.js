@@ -119,9 +119,11 @@ describe("GET /keys/:id/stats", () => {
     assert.equal(body.expiringSoon, 1);
     assert.equal(body.growth7d, 2);
     assert.equal(body.staleRatio30d, 0.4);
-    /** 단일 쿼리만 실행 */
-    assert.equal(queryCalls.length, 1);
+    /** 파편 통계는 집계 한 번, 그 뒤에 사용량 조회 한 번 */
+    assert.equal(queryCalls.length, 2);
     assert.match(queryCalls[0].sql, /FILTER \(WHERE valid_to IS NULL\)/);
+    assert.match(queryCalls[1].sql, /FROM agent_memory\.api_key_usage/);
+    assert.equal(body.usage.toolCalls30d, 0);
   });
 });
 

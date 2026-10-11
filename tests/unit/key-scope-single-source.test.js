@@ -33,7 +33,8 @@ const LIB  = path.resolve(HERE, "..", "..", "lib");
 const ALLOWED = {
   /** 고정 위치 파라미터로 격리를 박은 질의와 격리가 아닌 회계·멤버십 질의 */
   "admin/ApiKeyStore.js": 4, // 키 삭제 전 그 키의 파편, 재공고화 이력 수를 세는 회계 질의 2곳
-  "admin/ApiKeyLifecycleStore.js": 2, // 회전과 폐기가 api_key_secrets 행을 그 키로 고르는 갱신 2곳(기억 격리 조건이 아님)
+  "admin/ApiKeyLifecycleStore.js": 2,
+  "admin/ToolCallUsage.js": 1, // 키별 사용량 회계(api_key_usage)를 그 키 한 개로 읽는다. 기억 격리 조건이 아니다 // 회전과 폐기가 api_key_secrets 행을 그 키로 고르는 갱신 2곳(기억 격리 조건이 아님)
   "admin/admin-keys.js": 1,
   "memory/CaseEventStore.js": 2,
   "memory/consolidate/MemoryConsolidator.js": 3,
