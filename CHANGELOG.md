@@ -12,6 +12,11 @@
 
 - **도구 호출 수.** 키별로 그날 실제로 부른 도구 수와 도구별 수를 센다. 기존 요청 수(`call_count`)는 접속과 도구 목록 조회까지 세서 실제 사용량보다 크게 보였다. 관리 API `/keys/:id/stats`의 `usage`와 `/stats`의 `toolCallsToday`, 관리 콘솔 개요의 "오늘 도구 호출" 카드에서 본다.
 
+### Fixed
+
+- 링크 생성 트랜잭션의 `search_path`가 고정된 스키마 이름 대신 `PGVECTOR_SCHEMA` 설정 또는 시작 시 감지한 pgvector 스키마를 쓴다.
+- workspace 백필 스크립트(`backfill-reflect-workspace.js`, `backfill-workspace-inference.js`)의 제외 목록은 `default`, `batch`와 시험용 이름만 둔다.
+
 ### Docs
 
 - Codex 연결 안내에 기억 도구를 쓰게 하는 `AGENTS.md` 지침과 훅 설정을 추가했다. Codex는 MCP 도구를 모델에 바로 보여 주지 않아, 연결만 하면 도구를 부르지 않는다.
