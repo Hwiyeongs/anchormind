@@ -3,7 +3,7 @@
   "kind": "debt",
   "migrated_from": "",
   "tool_version": "1.3.0",
-  "created": "2026-10-05",
+  "created": "2026-10-12",
   "entries": [
     {
       "fingerprint": "0d3884ed874d4b3cf99b",
@@ -11,7 +11,7 @@
       "rule_id": "IL-111",
       "rule_version": 1,
       "path": ".env.example",
-      "line": 270,
+      "line": 271,
       "severity": "HIGH"
     },
     {
@@ -20,7 +20,7 @@
       "rule_id": "IL-111",
       "rule_version": 1,
       "path": ".env.example",
-      "line": 272,
+      "line": 273,
       "severity": "HIGH"
     },
     {
@@ -479,7 +479,7 @@
       "rule_id": "ARC-201",
       "rule_version": 1,
       "path": "assets/admin/modules/overview.js",
-      "line": 65,
+      "line": 66,
       "severity": "LOW"
     },
     {
@@ -542,7 +542,7 @@
       "rule_id": "AI-102",
       "rule_version": 1,
       "path": "config/memory.js",
-      "line": 408,
+      "line": 444,
       "severity": "HIGH"
     },
     {
@@ -578,7 +578,7 @@
       "rule_id": "IL-102",
       "rule_version": 1,
       "path": "docs/configuration.md",
-      "line": 594,
+      "line": 603,
       "severity": "CRITICAL"
     },
     {
@@ -875,7 +875,7 @@
       "rule_id": "ARC-204",
       "rule_version": 1,
       "path": "lib/admin/admin-keys.js",
-      "line": 74,
+      "line": 75,
       "severity": "LOW"
     },
     {
@@ -884,7 +884,7 @@
       "rule_id": "IL-305",
       "rule_version": 1,
       "path": "lib/admin/admin-keys.js",
-      "line": 230,
+      "line": 245,
       "severity": "MEDIUM"
     },
     {
@@ -893,7 +893,7 @@
       "rule_id": "IL-305",
       "rule_version": 1,
       "path": "lib/admin/admin-keys.js",
-      "line": 235,
+      "line": 250,
       "severity": "MEDIUM"
     },
     {
@@ -902,7 +902,7 @@
       "rule_id": "IL-305",
       "rule_version": 1,
       "path": "lib/admin/admin-keys.js",
-      "line": 295,
+      "line": 310,
       "severity": "MEDIUM"
     },
     {
@@ -911,7 +911,7 @@
       "rule_id": "IL-305",
       "rule_version": 1,
       "path": "lib/admin/admin-keys.js",
-      "line": 404,
+      "line": 419,
       "severity": "MEDIUM"
     },
     {
@@ -920,7 +920,7 @@
       "rule_id": "ARC-204",
       "rule_version": 1,
       "path": "lib/admin/admin-keys.js",
-      "line": 737,
+      "line": 752,
       "severity": "MEDIUM"
     },
     {
@@ -1338,8 +1338,8 @@
       "severity": "LOW"
     },
     {
-      "fingerprint": "65fc72b1501b66efc55c",
-      "loose": "06795fefaca0f6696589",
+      "fingerprint": "6338e9c6e781351c326a",
+      "loose": "01381d6e9fcda49ed7cc",
       "rule_id": "IL-501",
       "rule_version": 1,
       "path": "lib/admin/admin-routes.js",
@@ -1947,7 +1947,7 @@
       "rule_version": 1,
       "path": "lib/config.js",
       "line": 1,
-      "severity": "LOW"
+      "severity": "MEDIUM"
     },
     {
       "fingerprint": "7e6d6fba5aced31507c3",
@@ -1955,7 +1955,7 @@
       "rule_id": "AI-101",
       "rule_version": 1,
       "path": "lib/config.js",
-      "line": 639,
+      "line": 699,
       "severity": "LOW"
     },
     {
@@ -1964,7 +1964,7 @@
       "rule_id": "AI-101",
       "rule_version": 1,
       "path": "lib/config.js",
-      "line": 640,
+      "line": 700,
       "severity": "LOW"
     },
     {
@@ -1973,7 +1973,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/config.js",
-      "line": 1004,
+      "line": 1084,
       "severity": "LOW"
     },
     {
@@ -1982,7 +1982,7 @@
       "rule_id": "AI-101",
       "rule_version": 1,
       "path": "lib/config.js",
-      "line": 1025,
+      "line": 1105,
       "severity": "MEDIUM"
     },
     {
@@ -1991,7 +1991,7 @@
       "rule_id": "AI-101",
       "rule_version": 1,
       "path": "lib/config.js",
-      "line": 1026,
+      "line": 1106,
       "severity": "MEDIUM"
     },
     {
@@ -2000,7 +2000,7 @@
       "rule_id": "AI-101",
       "rule_version": 1,
       "path": "lib/config.js",
-      "line": 1027,
+      "line": 1107,
       "severity": "MEDIUM"
     },
     {
@@ -2009,7 +2009,7 @@
       "rule_id": "AI-101",
       "rule_version": 1,
       "path": "lib/config.js",
-      "line": 1029,
+      "line": 1109,
       "severity": "MEDIUM"
     },
     {
@@ -2018,7 +2018,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/config.js",
-      "line": 1114,
+      "line": 1194,
       "severity": "HIGH"
     },
     {
@@ -2486,7 +2486,7 @@
       "rule_id": "ARC-201",
       "rule_version": 1,
       "path": "lib/jsonrpc.js",
-      "line": 124,
+      "line": 126,
       "severity": "MEDIUM"
     },
     {
@@ -2495,7 +2495,7 @@
       "rule_id": "IL-307",
       "rule_version": 1,
       "path": "lib/jsonrpc.js",
-      "line": 464,
+      "line": 465,
       "severity": "MEDIUM"
     },
     {
@@ -2504,7 +2504,7 @@
       "rule_id": "IL-307",
       "rule_version": 1,
       "path": "lib/jsonrpc.js",
-      "line": 515,
+      "line": 516,
       "severity": "MEDIUM"
     },
     {
@@ -2513,7 +2513,7 @@
       "rule_id": "IL-307",
       "rule_version": 1,
       "path": "lib/jsonrpc.js",
-      "line": 530,
+      "line": 531,
       "severity": "MEDIUM"
     },
     {
@@ -2522,7 +2522,7 @@
       "rule_id": "IL-307",
       "rule_version": 1,
       "path": "lib/jsonrpc.js",
-      "line": 533,
+      "line": 534,
       "severity": "MEDIUM"
     },
     {
@@ -2531,7 +2531,7 @@
       "rule_id": "ARC-201",
       "rule_version": 1,
       "path": "lib/jsonrpc.js",
-      "line": 544,
+      "line": 545,
       "severity": "LOW"
     },
     {
@@ -2540,7 +2540,7 @@
       "rule_id": "ARC-204",
       "rule_version": 1,
       "path": "lib/jsonrpc.js",
-      "line": 652,
+      "line": 656,
       "severity": "LOW"
     },
     {
@@ -2549,7 +2549,7 @@
       "rule_id": "ARC-201",
       "rule_version": 1,
       "path": "lib/jsonrpc.js",
-      "line": 763,
+      "line": 767,
       "severity": "LOW"
     },
     {
@@ -3161,7 +3161,7 @@
       "rule_id": "ARC-201",
       "rule_version": 1,
       "path": "lib/memory/consolidate/ConsolidatorGC.js",
-      "line": 83,
+      "line": 84,
       "severity": "MEDIUM"
     },
     {
@@ -3170,7 +3170,7 @@
       "rule_id": "IL-501",
       "rule_version": 1,
       "path": "lib/memory/consolidate/ConsolidatorGC.js",
-      "line": 291,
+      "line": 292,
       "severity": "HIGH"
     },
     {
@@ -3179,7 +3179,7 @@
       "rule_id": "IL-501",
       "rule_version": 1,
       "path": "lib/memory/consolidate/ConsolidatorGC.js",
-      "line": 332,
+      "line": 333,
       "severity": "HIGH"
     },
     {
@@ -3188,7 +3188,7 @@
       "rule_id": "ARC-201",
       "rule_version": 1,
       "path": "lib/memory/consolidate/ConsolidatorGC.js",
-      "line": 458,
+      "line": 459,
       "severity": "LOW"
     },
     {
@@ -3197,7 +3197,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/memory/consolidate/ConsolidatorGC.js",
-      "line": 704,
+      "line": 710,
       "severity": "HIGH"
     },
     {
@@ -3206,7 +3206,7 @@
       "rule_id": "IL-501",
       "rule_version": 1,
       "path": "lib/memory/consolidate/ConsolidatorGC.js",
-      "line": 708,
+      "line": 714,
       "severity": "HIGH"
     },
     {
@@ -3215,7 +3215,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/memory/consolidate/ConsolidatorGC.js",
-      "line": 742,
+      "line": 748,
       "severity": "HIGH"
     },
     {
@@ -3224,7 +3224,7 @@
       "rule_id": "IL-501",
       "rule_version": 1,
       "path": "lib/memory/consolidate/ConsolidatorGC.js",
-      "line": 964,
+      "line": 970,
       "severity": "HIGH"
     },
     {
@@ -3251,7 +3251,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/memory/consolidate/MemoryConsolidator.js",
-      "line": 186,
+      "line": 188,
       "severity": "HIGH"
     },
     {
@@ -3260,7 +3260,7 @@
       "rule_id": "IL-501",
       "rule_version": 1,
       "path": "lib/memory/consolidate/MemoryConsolidator.js",
-      "line": 839,
+      "line": 841,
       "severity": "HIGH"
     },
     {
@@ -3269,7 +3269,7 @@
       "rule_id": "IL-501",
       "rule_version": 1,
       "path": "lib/memory/consolidate/MemoryConsolidator.js",
-      "line": 866,
+      "line": 868,
       "severity": "HIGH"
     },
     {
@@ -3278,7 +3278,7 @@
       "rule_id": "IL-501",
       "rule_version": 1,
       "path": "lib/memory/consolidate/MemoryConsolidator.js",
-      "line": 872,
+      "line": 874,
       "severity": "HIGH"
     },
     {
@@ -3287,7 +3287,7 @@
       "rule_id": "IL-501",
       "rule_version": 1,
       "path": "lib/memory/consolidate/MemoryConsolidator.js",
-      "line": 882,
+      "line": 884,
       "severity": "HIGH"
     },
     {
@@ -3296,7 +3296,7 @@
       "rule_id": "ARC-201",
       "rule_version": 1,
       "path": "lib/memory/consolidate/MemoryConsolidator.js",
-      "line": 945,
+      "line": 947,
       "severity": "MEDIUM"
     },
     {
@@ -3368,7 +3368,7 @@
       "rule_id": "ARC-201",
       "rule_version": 1,
       "path": "lib/memory/embedding/EmbeddingWorker.js",
-      "line": 183,
+      "line": 186,
       "severity": "LOW"
     },
     {
@@ -3377,7 +3377,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/memory/embedding/EmbeddingWorker.js",
-      "line": 188,
+      "line": 191,
       "severity": "MEDIUM"
     },
     {
@@ -3444,6 +3444,15 @@
       "severity": "MEDIUM"
     },
     {
+      "fingerprint": "e2fc6fa350b32e50ad51",
+      "loose": "723dbc3a9d220165db08",
+      "rule_id": "IL-501",
+      "rule_version": 1,
+      "path": "lib/memory/embedding/SegmentEmbeddingWorker.js",
+      "line": 231,
+      "severity": "HIGH"
+    },
+    {
       "fingerprint": "078059ab58dcab1992dc",
       "loose": "c1dc70aaeb07a5a1eab9",
       "rule_id": "IL-301",
@@ -3485,7 +3494,7 @@
       "rule_id": "ARC-201",
       "rule_version": 1,
       "path": "lib/memory/link/ContradictionDetector.js",
-      "line": 137,
+      "line": 138,
       "severity": "LOW"
     },
     {
@@ -3494,7 +3503,7 @@
       "rule_id": "ARC-204",
       "rule_version": 1,
       "path": "lib/memory/link/ContradictionDetector.js",
-      "line": 462,
+      "line": 464,
       "severity": "LOW"
     },
     {
@@ -3503,7 +3512,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/memory/link/ContradictionDetector.js",
-      "line": 604,
+      "line": 606,
       "severity": "HIGH"
     },
     {
@@ -3575,16 +3584,7 @@
       "rule_id": "ARC-201",
       "rule_version": 1,
       "path": "lib/memory/link/SessionLinker.js",
-      "line": 60,
-      "severity": "LOW"
-    },
-    {
-      "fingerprint": "c38de8e12b648c3f52aa",
-      "loose": "597d690783c8c26efd4e",
-      "rule_id": "ARC-201",
-      "rule_version": 1,
-      "path": "lib/memory/link/SessionLinker.js",
-      "line": 184,
+      "line": 254,
       "severity": "LOW"
     },
     {
@@ -3611,7 +3611,7 @@
       "rule_id": "ARC-201",
       "rule_version": 1,
       "path": "lib/memory/processors/MemoryRecaller.js",
-      "line": 118,
+      "line": 119,
       "severity": "LOW"
     },
     {
@@ -3620,7 +3620,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/memory/processors/MemoryRecaller.js",
-      "line": 131,
+      "line": 132,
       "severity": "HIGH"
     },
     {
@@ -3629,7 +3629,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/memory/processors/MemoryRecaller.js",
-      "line": 263,
+      "line": 264,
       "severity": "MEDIUM"
     },
     {
@@ -3647,7 +3647,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/memory/processors/MemoryRememberer.js",
-      "line": 361,
+      "line": 364,
       "severity": "MEDIUM"
     },
     {
@@ -3656,7 +3656,7 @@
       "rule_id": "ARC-201",
       "rule_version": 1,
       "path": "lib/memory/processors/MemoryRememberer.js",
-      "line": 511,
+      "line": 515,
       "severity": "LOW"
     },
     {
@@ -3665,7 +3665,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/memory/processors/MemoryRememberer.js",
-      "line": 651,
+      "line": 656,
       "severity": "HIGH"
     },
     {
@@ -3674,7 +3674,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/memory/processors/MemoryRememberer.js",
-      "line": 775,
+      "line": 781,
       "severity": "HIGH"
     },
     {
@@ -3683,16 +3683,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/memory/processors/MemoryRememberer.js",
-      "line": 788,
-      "severity": "HIGH"
-    },
-    {
-      "fingerprint": "f6cad5b56b085d27180f",
-      "loose": "b6a9daa32d7fa30c852e",
-      "rule_id": "IL-301",
-      "rule_version": 1,
-      "path": "lib/memory/processors/MemoryRememberer.js",
-      "line": 798,
+      "line": 794,
       "severity": "HIGH"
     },
     {
@@ -3701,7 +3692,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/memory/processors/MemoryRememberer.js",
-      "line": 922,
+      "line": 932,
       "severity": "MEDIUM"
     },
     {
@@ -3710,7 +3701,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/memory/processors/MemoryRememberer.js",
-      "line": 965,
+      "line": 975,
       "severity": "HIGH"
     },
     {
@@ -3719,7 +3710,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/memory/processors/MemoryRememberer.js",
-      "line": 987,
+      "line": 997,
       "severity": "HIGH"
     },
     {
@@ -3737,7 +3728,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/memory/processors/ReflectProcessor.js",
-      "line": 457,
+      "line": 464,
       "severity": "MEDIUM"
     },
     {
@@ -3746,7 +3737,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/memory/processors/ReflectProcessor.js",
-      "line": 511,
+      "line": 518,
       "severity": "HIGH"
     },
     {
@@ -3926,7 +3917,7 @@
       "rule_id": "ARC-201",
       "rule_version": 1,
       "path": "lib/memory/read/FragmentSearch.js",
-      "line": 297,
+      "line": 299,
       "severity": "LOW"
     },
     {
@@ -3935,7 +3926,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/memory/read/FragmentSearch.js",
-      "line": 315,
+      "line": 317,
       "severity": "HIGH"
     },
     {
@@ -3944,7 +3935,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/memory/read/FragmentSearch.js",
-      "line": 322,
+      "line": 324,
       "severity": "HIGH"
     },
     {
@@ -3953,7 +3944,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/memory/read/FragmentSearch.js",
-      "line": 428,
+      "line": 430,
       "severity": "MEDIUM"
     },
     {
@@ -3962,7 +3953,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/memory/read/FragmentSearch.js",
-      "line": 454,
+      "line": 456,
       "severity": "HIGH"
     },
     {
@@ -3971,7 +3962,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/memory/read/FragmentSearch.js",
-      "line": 477,
+      "line": 479,
       "severity": "HIGH"
     },
     {
@@ -3980,7 +3971,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/memory/read/FragmentSearch.js",
-      "line": 483,
+      "line": 485,
       "severity": "HIGH"
     },
     {
@@ -3989,7 +3980,7 @@
       "rule_id": "ARC-201",
       "rule_version": 1,
       "path": "lib/memory/read/FragmentSearch.js",
-      "line": 504,
+      "line": 506,
       "severity": "LOW"
     },
     {
@@ -3998,16 +3989,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/memory/read/FragmentSearch.js",
-      "line": 539,
-      "severity": "MEDIUM"
-    },
-    {
-      "fingerprint": "593ecffa1fd0ef4412fe",
-      "loose": "3296af55bb12631a4e6d",
-      "rule_id": "IL-301",
-      "rule_version": 1,
-      "path": "lib/memory/read/FragmentSearch.js",
-      "line": 591,
+      "line": 540,
       "severity": "MEDIUM"
     },
     {
@@ -4016,16 +3998,7 @@
       "rule_id": "ARC-201",
       "rule_version": 1,
       "path": "lib/memory/read/FragmentSearch.js",
-      "line": 614,
-      "severity": "LOW"
-    },
-    {
-      "fingerprint": "9db936038f0cffb0527d",
-      "loose": "9f6ceca5a22d791aba9c",
-      "rule_id": "ARC-201",
-      "rule_version": 1,
-      "path": "lib/memory/read/FragmentSearch.js",
-      "line": 832,
+      "line": 616,
       "severity": "LOW"
     },
     {
@@ -4034,7 +4007,7 @@
       "rule_id": "ARC-201",
       "rule_version": 1,
       "path": "lib/memory/read/FragmentSearch.js",
-      "line": 929,
+      "line": 928,
       "severity": "LOW"
     },
     {
@@ -4043,7 +4016,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/memory/read/FragmentSearch.js",
-      "line": 980,
+      "line": 979,
       "severity": "MEDIUM"
     },
     {
@@ -4052,7 +4025,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/memory/read/FragmentSearch.js",
-      "line": 1191,
+      "line": 1194,
       "severity": "HIGH"
     },
     {
@@ -4061,7 +4034,7 @@
       "rule_id": "IL-307",
       "rule_version": 1,
       "path": "lib/memory/read/FragmentSearch.js",
-      "line": 1220,
+      "line": 1223,
       "severity": "MEDIUM"
     },
     {
@@ -4070,7 +4043,7 @@
       "rule_id": "IL-307",
       "rule_version": 1,
       "path": "lib/memory/read/FragmentSearch.js",
-      "line": 1242,
+      "line": 1245,
       "severity": "MEDIUM"
     },
     {
@@ -4079,7 +4052,7 @@
       "rule_id": "IL-307",
       "rule_version": 1,
       "path": "lib/memory/read/FragmentSearch.js",
-      "line": 1262,
+      "line": 1265,
       "severity": "MEDIUM"
     },
     {
@@ -4421,7 +4394,7 @@
       "rule_id": "ARC-201",
       "rule_version": 1,
       "path": "lib/memory/write/BatchRememberProcessor.js",
-      "line": 420,
+      "line": 437,
       "severity": "LOW"
     },
     {
@@ -4430,7 +4403,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/memory/write/BatchRememberProcessor.js",
-      "line": 497,
+      "line": 514,
       "severity": "HIGH"
     },
     {
@@ -4439,7 +4412,7 @@
       "rule_id": "IL-307",
       "rule_version": 1,
       "path": "lib/memory/write/BatchRememberProcessor.js",
-      "line": 513,
+      "line": 530,
       "severity": "MEDIUM"
     },
     {
@@ -4448,7 +4421,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/memory/write/BatchRememberProcessor.js",
-      "line": 571,
+      "line": 591,
       "severity": "HIGH"
     },
     {
@@ -4457,7 +4430,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/memory/write/BatchRememberProcessor.js",
-      "line": 572,
+      "line": 592,
       "severity": "HIGH"
     },
     {
@@ -4466,7 +4439,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/memory/write/BatchRememberProcessor.js",
-      "line": 680,
+      "line": 700,
       "severity": "HIGH"
     },
     {
@@ -4560,21 +4533,39 @@
       "severity": "MEDIUM"
     },
     {
+      "fingerprint": "24e287818bd852bc4b50",
+      "loose": "2533dabafcecce9da96e",
+      "rule_id": "ARC-204",
+      "rule_version": 1,
+      "path": "lib/memory/write/EventTimeExtractor.js",
+      "line": 145,
+      "severity": "LOW"
+    },
+    {
+      "fingerprint": "c43ec008dca518346a51",
+      "loose": "99538422d4fc460eafc0",
+      "rule_id": "IL-307",
+      "rule_version": 1,
+      "path": "lib/memory/write/EventTimeExtractor.js",
+      "line": 287,
+      "severity": "MEDIUM"
+    },
+    {
+      "fingerprint": "2f946e4dddd4e9ef2c9e",
+      "loose": "8fc6908032873c783862",
+      "rule_id": "IL-307",
+      "rule_version": 1,
+      "path": "lib/memory/write/EventTimeExtractor.js",
+      "line": 333,
+      "severity": "MEDIUM"
+    },
+    {
       "fingerprint": "276534f1878c8cba52b2",
       "loose": "dfe11c036af6c0e350f4",
       "rule_id": "IL-501",
       "rule_version": 1,
       "path": "lib/memory/write/ForgetCascade.js",
-      "line": 149,
-      "severity": "HIGH"
-    },
-    {
-      "fingerprint": "17a5de67e2837e7665af",
-      "loose": "f0cccee7254ceebfc64f",
-      "rule_id": "IL-301",
-      "rule_version": 1,
-      "path": "lib/memory/write/FragmentFactory.js",
-      "line": 35,
+      "line": 157,
       "severity": "HIGH"
     },
     {
@@ -4583,7 +4574,7 @@
       "rule_id": "IL-307",
       "rule_version": 1,
       "path": "lib/memory/write/FragmentImporter.js",
-      "line": 62,
+      "line": 63,
       "severity": "LOW"
     },
     {
@@ -4818,7 +4809,7 @@
       "rule_version": 1,
       "path": "lib/scheduler.js",
       "line": 158,
-      "severity": "LOW"
+      "severity": "MEDIUM"
     },
     {
       "fingerprint": "fc7ad5ed810554cf8f56",
@@ -5078,7 +5069,7 @@
       "rule_id": "TYP-305",
       "rule_version": 1,
       "path": "lib/tools/memory-schemas.js",
-      "line": 433,
+      "line": 440,
       "severity": "LOW"
     },
     {
@@ -5096,7 +5087,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/tools/memory.js",
-      "line": 174,
+      "line": 176,
       "severity": "LOW"
     },
     {
@@ -5105,7 +5096,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/tools/memory.js",
-      "line": 209,
+      "line": 211,
       "severity": "HIGH"
     },
     {
@@ -5114,7 +5105,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/tools/memory.js",
-      "line": 255,
+      "line": 257,
       "severity": "HIGH"
     },
     {
@@ -5123,7 +5114,7 @@
       "rule_id": "ARC-201",
       "rule_version": 1,
       "path": "lib/tools/memory.js",
-      "line": 283,
+      "line": 285,
       "severity": "LOW"
     },
     {
@@ -5132,7 +5123,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/tools/memory.js",
-      "line": 292,
+      "line": 295,
       "severity": "HIGH"
     },
     {
@@ -5141,7 +5132,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/tools/memory.js",
-      "line": 470,
+      "line": 476,
       "severity": "HIGH"
     },
     {
@@ -5150,7 +5141,7 @@
       "rule_id": "ARC-201",
       "rule_version": 1,
       "path": "lib/tools/memory.js",
-      "line": 485,
+      "line": 491,
       "severity": "LOW"
     },
     {
@@ -5159,7 +5150,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/tools/memory.js",
-      "line": 603,
+      "line": 611,
       "severity": "HIGH"
     },
     {
@@ -5168,7 +5159,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/tools/memory.js",
-      "line": 656,
+      "line": 664,
       "severity": "LOW"
     },
     {
@@ -5177,7 +5168,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/tools/memory.js",
-      "line": 661,
+      "line": 669,
       "severity": "HIGH"
     },
     {
@@ -5186,7 +5177,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/tools/memory.js",
-      "line": 718,
+      "line": 726,
       "severity": "HIGH"
     },
     {
@@ -5195,7 +5186,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/tools/memory.js",
-      "line": 751,
+      "line": 759,
       "severity": "HIGH"
     },
     {
@@ -5204,7 +5195,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/tools/memory.js",
-      "line": 752,
+      "line": 760,
       "severity": "HIGH"
     },
     {
@@ -5213,7 +5204,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/tools/memory.js",
-      "line": 789,
+      "line": 798,
       "severity": "HIGH"
     },
     {
@@ -5222,7 +5213,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/tools/memory.js",
-      "line": 891,
+      "line": 900,
       "severity": "MEDIUM"
     },
     {
@@ -5231,7 +5222,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/tools/memory.js",
-      "line": 892,
+      "line": 901,
       "severity": "MEDIUM"
     },
     {
@@ -5240,7 +5231,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "lib/tools/memory.js",
-      "line": 1136,
+      "line": 1145,
       "severity": "HIGH"
     },
     {
@@ -5325,30 +5316,30 @@
       "severity": "LOW"
     },
     {
-      "fingerprint": "5592bca510b7d84529ce",
-      "loose": "f3ee52726dee0bd23561",
+      "fingerprint": "de76c35b203e1c2934a6",
+      "loose": "a2937f9cc8effcc60fc7",
       "rule_id": "IL-501",
       "rule_version": 1,
       "path": "scripts/align-synthetic-query-embedding.js",
-      "line": 64,
+      "line": 85,
       "severity": "HIGH"
     },
     {
-      "fingerprint": "4c7efd4613ca024e9e17",
-      "loose": "ef1cde925a16eae1c325",
+      "fingerprint": "27dcfe347966eaf0e35a",
+      "loose": "fc0a3c42edcd53d877cf",
       "rule_id": "IL-501",
       "rule_version": 1,
       "path": "scripts/align-synthetic-query-embedding.js",
-      "line": 65,
+      "line": 86,
       "severity": "HIGH"
     },
     {
-      "fingerprint": "3fe210fcf3b895acdc76",
-      "loose": "ef1cde925a16eae1c325",
+      "fingerprint": "9813988e16f2b99fea88",
+      "loose": "fc0a3c42edcd53d877cf",
       "rule_id": "IL-501",
       "rule_version": 1,
       "path": "scripts/align-synthetic-query-embedding.js",
-      "line": 70,
+      "line": 91,
       "severity": "HIGH"
     },
     {
@@ -5357,7 +5348,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "scripts/align-synthetic-query-embedding.js",
-      "line": 79,
+      "line": 100,
       "severity": "HIGH"
     },
     {
@@ -5640,6 +5631,24 @@
       "severity": "MEDIUM"
     },
     {
+      "fingerprint": "cec4ff01e039eb4640a9",
+      "loose": "dc9cf8adb4287acc2ba0",
+      "rule_id": "IL-111",
+      "rule_version": 1,
+      "path": "scripts/measure/recall-scale.mjs",
+      "line": 18,
+      "severity": "HIGH"
+    },
+    {
+      "fingerprint": "a13debe6acfd76e183e0",
+      "loose": "948931147cc94fb9c81a",
+      "rule_id": "IL-102",
+      "rule_version": 1,
+      "path": "scripts/measure/recall-scale.mjs",
+      "line": 78,
+      "severity": "MEDIUM"
+    },
+    {
       "fingerprint": "a9aaf3af9b84403ff035",
       "loose": "9dba5be89d60cfdf6f02",
       "rule_id": "IL-516",
@@ -5753,7 +5762,7 @@
       "rule_id": "IL-501",
       "rule_version": 1,
       "path": "scripts/post-migrate-flexible-embedding-dims.js",
-      "line": 83,
+      "line": 84,
       "severity": "HIGH"
     },
     {
@@ -5762,7 +5771,7 @@
       "rule_id": "IL-301",
       "rule_version": 1,
       "path": "scripts/post-migrate-flexible-embedding-dims.js",
-      "line": 96,
+      "line": 97,
       "severity": "HIGH"
     },
     {
@@ -5771,7 +5780,7 @@
       "rule_id": "IL-501",
       "rule_version": 1,
       "path": "scripts/post-migrate-flexible-embedding-dims.js",
-      "line": 108,
+      "line": 109,
       "severity": "HIGH"
     },
     {
@@ -6168,6 +6177,15 @@
       "rule_version": 1,
       "path": "tests/unit/search-param-adaptor.test.js",
       "line": 97,
+      "severity": "MEDIUM"
+    },
+    {
+      "fingerprint": "1d71b0f972ff40678a4d",
+      "loose": "0baf3483cf75c50c1834",
+      "rule_id": "IL-306",
+      "rule_version": 1,
+      "path": "tests/unit/tool-call-usage.test.js",
+      "line": 38,
       "severity": "MEDIUM"
     }
   ]
