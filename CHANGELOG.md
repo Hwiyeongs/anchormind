@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [6.5.1] - 2026-10-13
+
 ### Added
 
 - **workspace 누락 경고.** `remember`, `batch_remember`, `reflect`가 인자에도 키의 `default_workspace`에도 workspace 없이 오면 응답 `_meta.warnings`에 `workspace_missing`을 싣는다. 이런 파편은 전역으로 저장되어 모든 workspace의 recall에 나온다. `MEMENTO_MISSING_WORKSPACE`(`warn` 기본, `reject`, `allow`)로 거부하거나 끌 수 있다.
