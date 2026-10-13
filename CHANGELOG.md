@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [6.6.0] - 2026-10-13
+
 ### 업그레이드 주의
 
 - `MEMENTO_RANK_BEFORE_BUDGET`, `MEMENTO_RANKING_FIX_V2`를 없앴다. 두 값을 `off`로 쓰던 설치는 recall 순위가 기본 동작으로 바뀐다.
