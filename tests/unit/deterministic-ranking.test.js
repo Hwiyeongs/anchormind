@@ -8,7 +8,10 @@ import {
   paginateRankedFragments
 } from "../../lib/memory/read/DeterministicRanking.js";
 import { mergeHydratedCandidates, mergeRRF } from "../../lib/memory/read/FragmentSearch.js";
-import { MemoryRecaller } from "../../lib/memory/processors/MemoryRecaller.js";
+import { MemoryRecaller as BaseRecaller } from "../../lib/memory/processors/MemoryRecaller.js";
+import { recallerWithSearchStub } from "./_search-candidates-stub.js";
+
+const MemoryRecaller = recallerWithSearchStub(BaseRecaller);
 import { applyRerankerScores } from "../../lib/memory/read/Reranker.js";
 import { teardownTestResources, assertCleanShutdown } from "../_lifecycle.js";
 

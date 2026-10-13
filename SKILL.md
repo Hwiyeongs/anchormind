@@ -646,7 +646,7 @@ remember(content="선호하는 코딩 스타일: ...", topic="preference", type=
 | 깊은 조사 | 3000~5000 | 복잡한 주제, 다수 파편 필요 시 |
 | 에러 디버깅 | 2000 | 에러+해결책+관련 컨텍스트 |
 
-recall은 연결 파편을 포함한 후보에 최종 점수를 매긴 뒤 tokenBudget 안에서 점수가 높은 파편을 고른다(`MEMENTO_RANK_BEFORE_BUDGET=on`, 기본). 연결 파편도 같은 예산을 쓴다. 중요한 정보가 누락되면 tokenBudget을 올려서 재검색.
+recall은 연결 파편을 포함한 후보에 최종 점수를 매긴 뒤 tokenBudget 안에서 점수가 높은 파편을 고른다. 연결 파편도 같은 예산을 쓴다. 중요한 정보가 누락되면 tokenBudget을 올려서 재검색.
 
 ## recall 결과 해석
 

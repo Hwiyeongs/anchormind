@@ -6,11 +6,10 @@
  *
  * 1. 연결 파편 SQL은 recall의 type, topic, caseId, resolutionStatus, phase, affect, minImportance 조건을
  *    두 방향 조회에 모두 넣고, 출발 파편 ID(linked_from)를 돌려준다.
- * 2. MemoryRecaller는 두 순위 경로(MEMENTO_RANK_BEFORE_BUDGET on/off) 모두에서 같은 조건을 저장소에 넘기고,
- *    저장소가 조건을 지키지 않은 행도 결과에 넣지 않는다.
+ * 2. MemoryRecaller는 같은 조건을 저장소에 넘기고, 저장소가 조건을 지키지 않은 행도 결과에 넣지 않는다.
  */
 
-import { describe, it, afterEach, mock } from "node:test";
+import { describe, it, mock } from "node:test";
 import assert                            from "node:assert/strict";
 
 mock.module("../../lib/redis.js", {
@@ -35,10 +34,6 @@ mock.module("../../lib/memory/read/Reranker.js", {
 const { LinkStore, linkedFieldFilter }  = await import("../../lib/memory/link/LinkStore.js");
 const { FragmentSearch }                = await import("../../lib/memory/read/FragmentSearch.js");
 const { MemoryRecaller, recallFragmentFilters } = await import("../../lib/memory/processors/MemoryRecaller.js");
-
-afterEach(() => {
-  delete process.env.MEMENTO_RANK_BEFORE_BUDGET;
-});
 
 const FILTERS = {
   type: "error", topic: "memento-mcp", caseId: "debug-x", resolutionStatus: "open",
@@ -114,20 +109,17 @@ describe("MemoryRecaller 연결 파편 조건", () => {
     { ...base, id: "closed",   content: "linked closed", type: "error",    resolution_status: "resolved", linked_from: "seed" }
   ];
 
-  for (const mode of ["on", "off"]) {
-    it(`MEMENTO_RANK_BEFORE_BUDGET=${mode}: 조건을 넘기고 맞지 않는 행은 버린다`, async () => {
-      process.env.MEMENTO_RANK_BEFORE_BUDGET = mode;
-      const { recaller, calls } = buildRecaller(rows);
-      const result = await recaller.recall({ keywords: ["deploy"], type: "error", resolutionStatus: "open", tokenBudget: 5000 });
+  it("조건을 넘기고 맞지 않는 행은 버린다", async () => {
+    const { recaller, calls } = buildRecaller(rows);
+    const result = await recaller.recall({ keywords: ["deploy"], type: "error", resolutionStatus: "open", tokenBudget: 5000 });
 
-      assert.equal(calls.length, 1);
-      assert.equal(calls[0].type, "error");
-      assert.equal(calls[0].resolutionStatus, "open");
-      const ids = result.fragments.map(f => f.id).sort();
-      assert.deepEqual(ids, ["ok", "seed"]);
-      const linked = result.fragments.find(f => f.id === "ok");
-      assert.equal(linked.recall_source, "linked");
-      assert.equal(linked.linked_from, "seed");
-    });
-  }
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].type, "error");
+    assert.equal(calls[0].resolutionStatus, "open");
+    const ids = result.fragments.map(f => f.id).sort();
+    assert.deepEqual(ids, ["ok", "seed"]);
+    const linked = result.fragments.find(f => f.id === "ok");
+    assert.equal(linked.recall_source, "linked");
+    assert.equal(linked.linked_from, "seed");
+  });
 });

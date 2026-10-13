@@ -17,7 +17,7 @@ Evaluator: Jinho Choi
 | Reader | deepseek-flash (direct method, no chain-of-thought) |
 | Judges | gpt-4o-2024-08-06 (LongMemEval official judge setting: temperature 0, max_tokens 10), MiniMax-M3.1-Flash-Preview and claude-sonnet-5-5, all with the LongMemEval official prompts verbatim |
 | Segment search | on (`MEMENTO_SEGMENT_EMBEDDING_ENABLED=true`, `MEMENTO_SEGMENT_SEARCH=true`) |
-| Rank-before-budget | off (`MEMENTO_RANK_BEFORE_BUDGET=off`) |
+| Rank-before-budget | off (search-order cut, `MEMENTO_RANK_BEFORE_BUDGET=off` up to 6.5.2) |
 
 Before each query the run waits until both body embeddings and segment embeddings of that question's fragments exist. Accuracy is counted over all 500 questions with no final failures (ITT).
 
@@ -435,28 +435,6 @@ In the output JSON, `metrics`, `rows`, `coverage` and `labels` hold the same val
 ```bash
 node scripts/measure/recall-metrics.mjs --compare run-a.json run-b.json --out compare.json
 ```
-
-### Rank-before-budget comparison (`MEMENTO_RANK_BEFORE_BUDGET`)
-
-Compares recall budget selection (`MEMENTO_RANK_BEFORE_BUDGET=on`) with the search-order cut (`off`) on the same set under the same conditions. The switch is read at call time, so it is set through the environment of each run, and the applied value is recorded in `params.rank_before_budget` of the metric JSON. When the budget does not bind, both paths return the same result, so keep `--token-budget` at or below the recall default 1000 and use the same value in both runs. To include the effect of selecting linked fragments within the budget, pass `--include-links on` to both runs. The real run needs a restored database and embeddings (`--embeddings on`) and is an owner step; the procedure below has not been measured yet.
-
-```bash
-# 1. Baseline run on fresh restore A (search-order cut)
-MEMENTO_RANK_BEFORE_BUDGET=off node scripts/measure/recall-metrics.mjs \
-  --target localhost:35433/<restore_a> --embeddings on --token-budget 1000 --include-links on --out budget-off.json
-
-# 2. Candidate run on fresh restore B (rank before budget)
-MEMENTO_RANK_BEFORE_BUDGET=on node scripts/measure/recall-metrics.mjs \
-  --target localhost:35433/<restore_b> --embeddings on --token-budget 1000 --include-links on --out budget-on.json
-
-# 3. Paired bootstrap comparison of the budgeted nDCG only
-node scripts/measure/recall-metrics.mjs --compare budget-off.json budget-on.json --metric ndcg_at_budget --out budget-compare.json
-```
-
-- `--metric ndcg_at_budget` keeps only that metric in the comparison output. The interval values are the same as when all metrics are compared.
-- Reading: the budgeted nDCG improved when the `comparisons` entry with `group` `overall` has `ci_low` above 0 and `insufficient_n` false. Subset, tag and domain groups are read with the same rule.
-- When `warnings` lists a difference in `token_budget`, `query_keywords` or `include_links`, the runs were made under different conditions and are not compared.
-- With migration 051 applied to the restored copy (`DATABASE_URL=postgresql://<user>:<password>@localhost:35433/<restore_b> npm run migrate`; set `DATABASE_URL` explicitly so that no connection value from another settings file is used), `search_events.candidate_count` and `budget_kept` of the candidate run show the share of recalls where the budget bound (`SELECT count(*) FILTER (WHERE budget_kept < candidate_count), count(*) FROM agent_memory.search_events WHERE candidate_count IS NOT NULL`). Without it, recall and the metrics are the same and search events are recorded without the two columns.
 
 ### Context injection line annotation tokens (`MEMENTO_CONTEXT_ANNOTATE`)
 

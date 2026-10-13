@@ -10,6 +10,7 @@
 
 import { beforeEach, describe, it, mock } from "node:test";
 import assert from "node:assert/strict";
+import { recallerWithSearchStub } from "./_search-candidates-stub.js";
 
 function createRedisMock() {
   const sets    = new Map();
@@ -195,7 +196,8 @@ const { FragmentSearch }      = await import("../../lib/memory/read/FragmentSear
 const { SearchScope }         = await import("../../lib/memory/read/SearchScope.js");
 const { fetchGraphNeighbors } = await import("../../lib/memory/read/GraphNeighborSearch.js");
 const { LinkStore }           = await import("../../lib/memory/link/LinkStore.js");
-const { MemoryRecaller }      = await import("../../lib/memory/processors/MemoryRecaller.js");
+const { MemoryRecaller: BaseRecaller } = await import("../../lib/memory/processors/MemoryRecaller.js");
+const MemoryRecaller = recallerWithSearchStub(BaseRecaller);
 
 const NOW = new Date().toISOString();
 

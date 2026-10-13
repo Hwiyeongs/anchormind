@@ -18,7 +18,7 @@ AnchorMind가 제공하는 기능, 응답 메타, 선택 모듈, 기술 스택�
 
 - 확산 활성화: `recall`에 `contextText`로 지금 하는 일을 알려 주면 관련 파편이 먼저 나온다 (`ENABLE_SPREADING_ACTIVATION`).
 - 본문 어휘 검색: 본문 단어로도 찾는다. 임베딩이 꺼져 있어도 동작하지만 GIN 색인이 있어야 한다 (`MEMENTO_LEXICAL_CHANNEL`).
-- 예산 안에서 고르기: 연결된 파편까지 후보로 점수를 매긴 뒤 `tokenBudget` 안에서 고른다 (`MEMENTO_RANK_BEFORE_BUDGET`).
+- 예산 안에서 고르기: 연결된 파편까지 후보로 점수를 매긴 뒤 `tokenBudget` 안에서 고른다.
 - 답 꾸러미: `recall(format: "pack")`은 출처와 저장일이 붙은 인용용 블록을 돌려준다. `context`가 주입하는 줄에도 저장일과 확인 상태가 붙는다 (`MEMENTO_CONTEXT_ANNOTATE`).
 - 로컬 임베딩: `EMBEDDING_PROVIDER=transformers`로 외부 API 없이 임베딩을 만든다. 기본 모델은 `Xenova/multilingual-e5-small`(384차원)이다.
 - 정서 태그: 파편에 `affect`(neutral, frustration, confidence, surprise, doubt, satisfaction)를 붙이고 이 값으로 걸러 검색한다.

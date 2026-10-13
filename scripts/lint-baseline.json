@@ -25,7 +25,7 @@
     "lib/memory/link/ContradictionDetector.js": 35,
     "lib/memory/link/SessionLinker.js": 28,
     "lib/memory/processors/EpisodeContinuityService.js": 25,
-    "lib/memory/processors/MemoryRecaller.js": 38,
+    "lib/memory/processors/MemoryRecaller.js": 37,
     "lib/memory/processors/MemoryRememberer.js": 21,
     "lib/memory/processors/ReflectProcessor.js": 23,
     "lib/memory/processors/SessionActivityTracker.js": 23,

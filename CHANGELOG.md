@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### 업그레이드 주의
+
+- `MEMENTO_RANK_BEFORE_BUDGET`, `MEMENTO_RANKING_FIX_V2`를 없앴다. 두 값을 `off`로 쓰던 설치는 recall 순위가 기본 동작으로 바뀐다.
+
+### Removed
+
+- recall의 검색 순서 절단 경로와 RRF 마지막 값 우선 병합 경로.
+
 ## [6.5.2] - 2026-10-13
 
 ### Fixed

@@ -17,7 +17,7 @@
 | 리더 | deepseek-flash (direct 방식, chain-of-thought 미사용) |
 | 평가자 | gpt-4o-2024-08-06(LongMemEval 공식 평가자 설정: temperature 0, max_tokens 10), MiniMax-M3.1-Flash-Preview, claude-sonnet-5-5. 모두 LongMemEval 공식 프롬프트 그대로 |
 | 구간 검색 | 켬 (`MEMENTO_SEGMENT_EMBEDDING_ENABLED=true`, `MEMENTO_SEGMENT_SEARCH=true`) |
-| 순위 후 예산 선택 | 끔 (`MEMENTO_RANK_BEFORE_BUDGET=off`) |
+| 순위 후 예산 선택 | 끔 (검색 순서 절단, 6.5.2까지의 `MEMENTO_RANK_BEFORE_BUDGET=off`) |
 
 질문 직전에 해당 질문 파편의 본문 임베딩과 구간 임베딩이 모두 만들어질 때까지 기다린다. 정확도는 최종 실패 없이 500문항 전체를 분모로 센다(ITT).
 
@@ -338,28 +338,6 @@ node scripts/measure/recall-metrics.mjs --target localhost:35433/<복구본_DB> 
 ```bash
 node scripts/measure/recall-metrics.mjs --compare run-a.json run-b.json --out compare.json
 ```
-
-### 순위 후 예산 선택 비교 (`MEMENTO_RANK_BEFORE_BUDGET`)
-
-recall 예산 선택(`MEMENTO_RANK_BEFORE_BUDGET=on`)과 검색 순서 절단(`off`)을 같은 세트, 같은 조건에서 비교한다. 스위치는 호출 시점에 읽으므로 실행할 때의 환경 변수로 정하고, 지표 JSON의 `params.rank_before_budget`에 실제 적용 값이 남는다. 예산이 묶이지 않으면 두 경로의 결과가 같으므로 `--token-budget`은 recall 기본값 1000 이하로 두고 두 실행에 같은 값을 쓴다. 연결 파편도 예산 안에서 고르는 효과까지 보려면 두 실행 모두 `--include-links on`을 준다. 실제 실행은 복구본 DB와 임베딩(`--embeddings on`)이 필요한 소유자 단계이며, 아래 절차의 결과는 아직 측정하지 않았다.
-
-```bash
-# 1. 새 복구본 A에서 기준 실행(검색 순서 절단)
-MEMENTO_RANK_BEFORE_BUDGET=off node scripts/measure/recall-metrics.mjs \
-  --target localhost:35433/<복구본_A> --embeddings on --token-budget 1000 --include-links on --out budget-off.json
-
-# 2. 새 복구본 B에서 후보 실행(순위 후 예산 선택)
-MEMENTO_RANK_BEFORE_BUDGET=on node scripts/measure/recall-metrics.mjs \
-  --target localhost:35433/<복구본_B> --embeddings on --token-budget 1000 --include-links on --out budget-on.json
-
-# 3. 예산 내 nDCG만 짝지은 부트스트랩으로 비교
-node scripts/measure/recall-metrics.mjs --compare budget-off.json budget-on.json --metric ndcg_at_budget --out budget-compare.json
-```
-
-- `--metric ndcg_at_budget`은 비교 결과에서 그 지표만 남긴다. 구간 값은 모든 지표를 비교할 때와 같다.
-- 판단: `comparisons`에서 `group`이 `overall`인 항목의 `ci_low`가 0보다 크고 `insufficient_n`이 false이면 예산 내 nDCG가 개선된 것이다. 부분집합, 태그, 영역 묶음은 같은 규칙으로 읽는다.
-- `warnings`에 `token_budget`, `query_keywords`, `include_links` 차이가 있으면 조건이 다른 실행이므로 비교하지 않는다.
-- 복구본에 마이그레이션 051을 적용하면(`DATABASE_URL=postgresql://<사용자>:<비밀번호>@localhost:35433/<복구본_B> npm run migrate`, `DATABASE_URL`을 명시해 다른 설정 파일의 접속 값을 쓰지 않게 한다) 후보 실행의 `search_events.candidate_count`, `budget_kept`로 예산이 묶인 recall의 비율을 볼 수 있다(`SELECT count(*) FILTER (WHERE budget_kept < candidate_count), count(*) FROM agent_memory.search_events WHERE candidate_count IS NOT NULL`). 적용하지 않아도 recall과 지표는 같고 검색 이벤트는 두 열 없이 기록된다.
 
 ### context 주입 줄 주석 토큰 측정 (`MEMENTO_CONTEXT_ANNOTATE`)
 

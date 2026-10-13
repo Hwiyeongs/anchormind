@@ -18,7 +18,7 @@ Names in parentheses are the environment variables that turn each feature on or 
 
 - Spreading activation: pass `contextText` to `recall` to describe what you are working on. Related fragments come first (`ENABLE_SPREADING_ACTIVATION`).
 - Body lexical search: finds fragments by words in the text. It works with embeddings off, but it needs the GIN index (`MEMENTO_LEXICAL_CHANNEL`).
-- Selecting within the budget: candidates, including linked fragments, are scored before selection within `tokenBudget` (`MEMENTO_RANK_BEFORE_BUDGET`).
+- Selecting within the budget: candidates, including linked fragments, are scored before selection within `tokenBudget`.
 - Answer pack: `recall(format: "pack")` returns quotable blocks with source and saved date. Lines injected by `context` also include saved date and verification status (`MEMENTO_CONTEXT_ANNOTATE`).
 - Local embeddings: `EMBEDDING_PROVIDER=transformers` creates embeddings without an external API. The default model is `Xenova/multilingual-e5-small` (384 dimensions).
 - Affect tags: tag fragments with `affect` (neutral, frustration, confidence, surprise, doubt, satisfaction) and filter searches by that tag.
