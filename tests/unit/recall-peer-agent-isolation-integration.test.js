@@ -442,7 +442,7 @@ describe("GraphNeighborSearch SQL 및 최종 RRF 격리", () => {
     assert.deepEqual(params, [["seed"], ["seed"], 10, ["key-1"], "agent-a", "ws-a", "key-1"]);
   });
 
-  it("includePeerAgents=true는 agent 조건만 생략하고 key_id/workspace 조건은 유지한다", async () => {
+  it("includePeerAgents=true는 agent 일치 조건만 생략하고 귀속 불명 파편 제외와 key_id/workspace 조건은 유지한다", async () => {
     await fetchGraphNeighbors(
       ["seed"],
       10,
@@ -574,7 +574,7 @@ describe("LinkStore SQL agent/workspace 격리", () => {
     assert.deepEqual(params, [["seed"], ["key-1"], "agent-a", "ws-a", "key-1"]);
   });
 
-  it("includePeerAgents=true는 agent 조건만 생략하고 key_id/workspace 조건은 유지한다", async () => {
+  it("includePeerAgents=true는 agent 일치 조건만 생략하고 귀속 불명 파편 제외와 key_id/workspace 조건은 유지한다", async () => {
     const store = new LinkStore();
     await store.getLinkedFragments(
       ["seed"],
@@ -586,9 +586,10 @@ describe("LinkStore SQL agent/workspace 격리", () => {
 
     const { sql, params } = vectorQueries.at(-1);
     assert.doesNotMatch(sql, /f\.agent_id = \$/);
+    assert.equal((sql.match(/f\.agent_id IS NOT NULL/g) ?? []).length, 2);
     assert.match(sql, /f\.key_id = ANY\(\$2(::text\[\])?\)/);
-    assert.match(sql, /\(f\.workspace = \$3 OR f\.workspace IS NULL\)/);
-    assert.deepEqual(params, [["seed"], ["key-1"], "ws-a", "key-1"]);
+    assert.match(sql, /\(f\.workspace = \$4 OR f\.workspace IS NULL\)/);
+    assert.deepEqual(params, [["seed"], ["key-1"], "agent-a", "ws-a", "key-1"]);
   });
 
   it("isAnchor=false를 양방향 UNION SQL에 동일하게 적용한다", async () => {
