@@ -426,16 +426,18 @@ async function gracefulShutdown(signal, { exitCode = 0 } = {}) {
 
   if (drainPromises.length > 0) {
     console.log(`[Shutdown] Waiting for ${drainPromises.length} worker(s) to drain (timeout: ${DRAIN_TIMEOUT_MS}ms)...`);
-    const timeout = new Promise(resolve =>
-      setTimeout(() => {
+    let drainTimer;
+    const timeout = new Promise(resolve => {
+      drainTimer = setTimeout(() => {
         console.log("[Shutdown] Worker drain timeout reached, proceeding with shutdown");
         resolve();
-      }, DRAIN_TIMEOUT_MS)
-    );
+      }, DRAIN_TIMEOUT_MS);
+    });
     await Promise.race([
       Promise.allSettled(drainPromises),
       timeout,
     ]);
+    clearTimeout(drainTimer);
     console.log("[Shutdown] Workers drained");
   }
 

@@ -78,6 +78,7 @@ export const SWITCHES = Object.freeze([
 
   /* 입력 검증과 쓰기 경로 */
   enumOf("MEMENTO_TOOL_ARGS_VALIDATION", ["off", "warn", "enforce"], "warn", "쓰기 경로", "tools/call 인자를 inputSchema와 대조하는 방식", { off: ["off"], invalid: "enforce", emptyOnly: true }),
+  enumOf("MEMENTO_MISSING_WORKSPACE", ["warn", "reject", "allow"], "warn", "쓰기 경로", "workspace도 키 기본값도 없는 remember, batch_remember, reflect를 경고하거나 거부한다", { off: ["allow"] }),
   boolOff("MEMENTO_TOOL_ARGS_ALLOW_UNKNOWN", "쓰기 경로", "inputSchema에 없는 인자를 위반으로 보지 않는다"),
   boolOff("MEMENTO_REMEMBER_ATOMIC", "쓰기 경로", "remember의 한도 확인과 저장을 한 트랜잭션으로 묶는다"),
   boolOff("MEMENTO_REMEMBER_DUPLICATE_GUARD", "쓰기 경로", "remember 중복 적중 시 기존 파편을 고치지 않고 상태만 알린다"),

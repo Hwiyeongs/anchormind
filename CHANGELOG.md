@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Added
+
+- **workspace 누락 경고.** `remember`, `batch_remember`, `reflect`가 인자에도 키의 `default_workspace`에도 workspace 없이 오면 응답 `_meta.warnings`에 `workspace_missing`을 싣는다. 이런 파편은 전역으로 저장되어 모든 workspace의 recall에 나온다. `MEMENTO_MISSING_WORKSPACE`(`warn` 기본, `reject`, `allow`)로 거부하거나 끌 수 있다.
+- recall 결과의 연결 파편에 `source: "linked"`와 출발 파편 `linked_from`이 붙어 검색 결과와 구분된다.
+- `scripts/backfill-reflect-workspace.js`가 topic이 실존 workspace 이름과 같은 파편도 그 workspace로 옮기고, `--exclude=a,b`로 후보에서 뺄 이름을 받는다.
+- `scripts/normalize-feedback-tool-names.js`: 저장된 `tool_feedback.tool_name`을 정규화한다(기본 미리보기, `--execute`로 적용).
+
+### Fixed
+
+- recall의 `type`, `topic`, `caseId`, `resolutionStatus`, `phase`, `affect`, `minImportance` 조건이 1-hop 연결 파편에도 적용된다. 조건은 연결 조회 SQL 안에서 걸려 연결 파편 수 제한이 조건을 통과한 파편에만 쓰인다.
+- 같은 키 그룹의 다른 키가 저장한 파편을 `amend`하면 `"Update failed"` 대신 `code: "not_owner"`와 이유를 돌려준다.
+- `tool_feedback`이 `mcp__<서버>__recall`, `anchormind-recall` 같은 클라이언트 표기를 도구 이름(`recall`)으로 저장한다. 다른 서버 도구 이름은 MCP 접두어만 뗀다.
+- `tool_feedback`의 `search_event_id`가 숫자 문자열도 받는다.
+- 종료할 때 DB 풀이 반환되지 않는 연결을 최대 5초만 기다린다. 이전에는 `MEMENTO_SHUTDOWN_DEADLINE_MS`(60초)까지 멈춰 있다가 강제 종료되어, 재시작마다 그동안 요청을 받지 못했다.
+
 ## [6.5.0] - 2026-10-12
 
 키가 실제로 기억 도구를 쓰는지 따로 볼 수 있고, Codex에서 기억 도구를 쓰게 하는 설정을 안내한다.

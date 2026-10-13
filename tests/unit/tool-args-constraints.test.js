@@ -95,3 +95,28 @@ describe("amend 본문 상한", () => {
     assert.deepEqual(touched, []);
   });
 });
+
+describe("tool_feedback search_event_id", () => {
+  it("정수와 숫자 문자열은 받고 그 밖의 문자열은 거부한다", () => {
+    const base = { tool_name: "recall", relevant: true, sufficient: true };
+    assert.doesNotThrow(enforce("tool_feedback", { ...base, search_event_id: 42 }));
+    assert.doesNotThrow(enforce("tool_feedback", { ...base, search_event_id: "42" }));
+    assert.throws(enforce("tool_feedback", { ...base, search_event_id: "se-42" }), /search_event_id: matches none/);
+  });
+});
+
+describe("amend 소유 키", () => {
+  it("같은 그룹의 다른 키가 저장한 파편은 수정 전에 not_owner로 거부한다", async () => {
+    const touched = [];
+    const r = new MemoryRememberer({
+      store: {
+        getById: async () => ({ id: "frag-0000000000000000", key_id: "k2", agent_id: "default", content: "c" }),
+        update : async () => { touched.push("update"); return null; }
+      }
+    });
+    const res = await r.amend({ id: "frag-0000000000000000", importance: 0.7, _keyId: "k1", _groupKeyIds: ["k1", "k2"] });
+    assert.equal(res.updated, false);
+    assert.equal(res.code, "not_owner");
+    assert.deepEqual(touched, []);
+  });
+});
