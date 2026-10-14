@@ -62,8 +62,8 @@ For MCP tool details, see [SKILL.md](../SKILL.md).
 | POST | /v1/internal/model/nothing/memory/fragments | Create fragment |
 | GET | /v1/internal/model/nothing/memory/fragments/:id | Fragment detail |
 | GET | /v1/internal/model/nothing/memory/fragments/:id/history | Fragment change history |
-| PATCH | /v1/internal/model/nothing/memory/fragments/:id | Update fragment |
-| DELETE | /v1/internal/model/nothing/memory/fragments/:id | Delete fragment |
+| PATCH | /v1/internal/model/nothing/memory/fragments/:id | Update fragment. Returns 409 `duplicate_content` when the content matches another fragment |
+| DELETE | /v1/internal/model/nothing/memory/fragments/:id | Delete fragment. `dryRun=true` previews, `force=true` also deletes permanent fragments. Returns 409 `permanent_protected` when permanent protection blocks deletion |
 | GET | /v1/internal/model/nothing/memory/anomalies | Anomaly detection results |
 | POST | /v1/internal/model/nothing/search | Key-scoped recall proxy (key_ids, keywords, text, type, topic, pageSize) |
 | GET | /v1/internal/model/nothing/search-events | Search event list |

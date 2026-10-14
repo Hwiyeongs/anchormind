@@ -65,8 +65,8 @@ MCP 도구 상세는 [SKILL.md](../SKILL.md) 참조.
 | POST | /v1/internal/model/nothing/memory/fragments | 파편 생성 |
 | GET | /v1/internal/model/nothing/memory/fragments/:id | 파편 상세 |
 | GET | /v1/internal/model/nothing/memory/fragments/:id/history | 파편 변경 이력 |
-| PATCH | /v1/internal/model/nothing/memory/fragments/:id | 파편 수정 |
-| DELETE | /v1/internal/model/nothing/memory/fragments/:id | 파편 삭제 |
+| PATCH | /v1/internal/model/nothing/memory/fragments/:id | 파편 수정. 본문이 다른 파편과 겹치면 409 `duplicate_content` |
+| DELETE | /v1/internal/model/nothing/memory/fragments/:id | 파편 삭제. `dryRun=true`는 미리보기, `force=true`는 permanent 파편도 삭제. permanent 보호로 못 지우면 409 `permanent_protected` |
 | GET | /v1/internal/model/nothing/memory/anomalies | 이상 탐지 결과 |
 | POST | /v1/internal/model/nothing/search | 키 범위 recall 프록시 (key_ids, keywords, text, type, topic, pageSize) |
 | GET | /v1/internal/model/nothing/search-events | 검색 이벤트 목록 |

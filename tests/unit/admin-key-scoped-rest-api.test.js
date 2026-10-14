@@ -39,10 +39,12 @@ mock.module("../../lib/tools/db.js", {
 /* ── MemoryManager mock ── */
 let mgrCalls = [];
 let mgrError = null;
+let amendResult  = null;
+let forgetResult = null;
 const mgrStub = {
   remember:        (p) => { mgrCalls.push(["remember", p]);        return mgrError ? Promise.reject(mgrError) : Promise.resolve({ success: true, id: "new-frag" }); },
-  amend:           (p) => { mgrCalls.push(["amend", p]);           return mgrError ? Promise.reject(mgrError) : Promise.resolve({ updated: true, fragment: { id: p.id } }); },
-  forget:          (p) => { mgrCalls.push(["forget", p]);          return Promise.resolve(p.dryRun ? { dryRun: true, simulated: { would_delete: true } } : { deleted: 1, protected: 0 }); },
+  amend:           (p) => { mgrCalls.push(["amend", p]);           return mgrError ? Promise.reject(mgrError) : Promise.resolve(amendResult ?? { updated: true, fragment: { id: p.id } }); },
+  forget:          (p) => { mgrCalls.push(["forget", p]);          return Promise.resolve(forgetResult ?? (p.dryRun ? { dryRun: true, simulated: { would_delete: true } } : { deleted: 1, protected: 0 })); },
   recall:          (p) => { mgrCalls.push(["recall", p]);          return Promise.resolve({ fragments: [{ id: "f1" }], searchPath: ["L1:1"], count: 1, totalCount: 1 }); },
   fragmentHistory: (p) => { mgrCalls.push(["fragmentHistory", p]); return Promise.resolve({ current: { id: p.id }, versions: [] }); }
 };
@@ -96,6 +98,8 @@ beforeEach(() => {
   queryResults = [];
   mgrCalls     = [];
   mgrError     = null;
+  amendResult  = null;
+  forgetResult = null;
 });
 
 /* ── GET /keys/:id/stats ── */
@@ -284,6 +288,20 @@ describe("PATCH /memory/fragments/:id", () => {
     assert.equal(res.statusCode, 500);
     assert.deepEqual(JSON.parse(res.body), { error: "Internal error" });
   });
+
+  it("본문이 다른 파편과 겹쳐 병합되면 409와 기존 파편 id로 응답한다", async () => {
+    amendResult = { updated: false, merged: true, existingId: "frag-dup" };
+    const res = await patchWith({ content: "x" });
+    assert.equal(res.statusCode, 409);
+    assert.deepEqual(JSON.parse(res.body), { error: "Content duplicates an existing fragment", code: "duplicate_content", existingId: "frag-dup" });
+  });
+
+  it("소유 키가 아니면 400과 code를 함께 돌려준다", async () => {
+    amendResult = { updated: false, code: "not_owner", error: "Fragment is owned by another API key; only the key that stored it can amend it" };
+    const res = await patchWith({ content: "x" });
+    assert.equal(res.statusCode, 400);
+    assert.equal(JSON.parse(res.body).code, "not_owner");
+  });
 });
 
 /* ── DELETE /memory/fragments/:id ── */
@@ -298,6 +316,37 @@ describe("DELETE /memory/fragments/:id", () => {
     assert.equal(name, "forget");
     assert.equal(params.dryRun, true);
     assert.equal(params.id, "frag-1");
+    assert.equal(params.force, false);
+  });
+
+  it("force=true를 forget에 넘긴다", async () => {
+    const res = fakeRes();
+    await handleMemory(
+      { method: "DELETE" }, res, makeUrl(`${ADMIN_BASE}/memory/fragments/frag-1?force=true`)
+    );
+    assert.equal(res.statusCode, 200);
+    assert.equal(mgrCalls[0][1].force, true);
+  });
+
+  it("permanent 보호로 지우지 못하면 409로 응답한다", async () => {
+    forgetResult = { deleted: 0, protected: 1, reason: "permanent 파편은 force 옵션 필요" };
+    const res = fakeRes();
+    await handleMemory(
+      { method: "DELETE" }, res, makeUrl(`${ADMIN_BASE}/memory/fragments/frag-1`)
+    );
+    assert.equal(res.statusCode, 409);
+    const body = JSON.parse(res.body);
+    assert.equal(body.code, "permanent_protected");
+    assert.equal(body.deleted, 0);
+  });
+
+  it("이미 없는 파편 삭제는 200으로 응답한다", async () => {
+    forgetResult = { deleted: 0, protected: 0 };
+    const res = fakeRes();
+    await handleMemory(
+      { method: "DELETE" }, res, makeUrl(`${ADMIN_BASE}/memory/fragments/frag-1`)
+    );
+    assert.equal(res.statusCode, 200);
   });
 });
 
