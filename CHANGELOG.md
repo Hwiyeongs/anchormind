@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [6.6.1] - 2026-10-14
+
+### Fixed
+
+- 관리 API `DELETE /memory/fragments/:id`가 `force=true`를 받아 permanent 파편도 지운다. permanent 보호로 지우지 못하면 200 대신 409와 `code: "permanent_protected"`로 응답한다.
+- 관리 API `PATCH /memory/fragments/:id`가 본문이 다른 파편과 겹쳐 병합되면 409와 `code: "duplicate_content"`, `existingId`로 응답한다. 거절 응답에 amend의 `code`를 싣는다.
+- 관리 API의 파편 수정·삭제 거절을 경고 로그로 남긴다.
+
 ## [6.6.0] - 2026-10-13
 
 ### 업그레이드 주의
